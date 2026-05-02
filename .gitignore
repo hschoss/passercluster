@@ -1,2 +1,8 @@
 # GitHub actions binaries
 bin/
+
+# Talos secrets & configs
+talos/*.yaml
+talos/talosconfig
+talos/*kubeconfig*
+!talos/*-template.yaml
