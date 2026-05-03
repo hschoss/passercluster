@@ -34,6 +34,13 @@ spec:
             'trusted_proxies' => ['10.244.0.0/16'],
             'forwarded_for_headers' => ['HTTP_X_FORWARDED_FOR'],
           );
+        domain.config.php: |-
+          <?php
+          $CONFIG = array(
+            'trusted_domains' => ['nextcloud.passer.com', 'localhost'],
+            'overwrite.cli.url' => 'https://nextcloud.passer.com',
+            'overwriteprotocol' => 'https',
+          );
     persistence:
       enabled: true
       storageClass: longhorn
@@ -49,6 +56,18 @@ spec:
           enabled: true
           storageClass: longhorn
           size: 2Gi
+    livenessProbe:
+      httpHeaders:
+        - name: Host
+          value: nextcloud.passer.com
+    readinessProbe:
+      httpHeaders:
+        - name: Host
+          value: nextcloud.passer.com
+    startupProbe:
+      httpHeaders:
+        - name: Host
+          value: nextcloud.passer.com
     phpClientHttpsFix:
       enabled: false
     ingress:

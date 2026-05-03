@@ -62,8 +62,8 @@ spec:
             - sh
             - -c
             - |
+              mkdir -p /data/conf /data/work
               if [ ! -f /data/conf/AdGuardHome.yaml ]; then
-                mkdir -p /data/conf
                 cp /config/AdGuardHome.yaml /data/conf/AdGuardHome.yaml
               fi
           volumeMounts:
