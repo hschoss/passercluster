@@ -5,4 +5,4 @@ metadata:
   namespace: nextcloud
 spec:
   hostnames:
-    - nextcloud.staging
+    - nextcloud-staging.fritz.box

@@ -5,4 +5,4 @@ metadata:
   namespace: vaultwarden
 spec:
   hostnames:
-    - vaultwarden.staging
+    - vaultwarden-staging.fritz.box

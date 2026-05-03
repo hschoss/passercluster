@@ -21,7 +21,7 @@ spec:
       name: RetryOnFailure
   values:
     nextcloud:
-      host: nextcloud.local
+      host: nextcloud.fritz.box
       existingSecret:
         enabled: true
         secretName: nextcloud-credentials
@@ -37,9 +37,8 @@ spec:
         domain.config.php: |-
           <?php
           $CONFIG = array(
-            'trusted_domains' => ['nextcloud.passer.com', 'localhost'],
-            'overwrite.cli.url' => 'https://nextcloud.passer.com',
-            'overwriteprotocol' => 'https',
+            'trusted_domains' => ['nextcloud.fritz.box', 'localhost'],
+            'overwrite.cli.url' => 'http://nextcloud.fritz.box',
           );
     persistence:
       enabled: true
@@ -59,15 +58,15 @@ spec:
     livenessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.com
+          value: nextcloud.fritz.box
     readinessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.com
+          value: nextcloud.fritz.box
     startupProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.com
+          value: nextcloud.fritz.box
     phpClientHttpsFix:
       enabled: false
     ingress:

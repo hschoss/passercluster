@@ -7,9 +7,9 @@ spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
-      sectionName: https
+      sectionName: http
   hostnames:
-    - jellyfin.local
+    - jellyfin.fritz.box
   rules:
     - matches:
         - path:

@@ -32,7 +32,7 @@ spec:
           namespace: envoy-gateway-system
           sectionName: http
       hostnames:
-        - podinfo.local
+        - podinfo.fritz.box
       rules:
         - matches:
             - path:

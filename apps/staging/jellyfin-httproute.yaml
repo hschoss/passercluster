@@ -5,4 +5,4 @@ metadata:
   namespace: jellyfin
 spec:
   hostnames:
-    - jellyfin.staging
+    - jellyfin-staging.fritz.box

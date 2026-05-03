@@ -7,9 +7,9 @@ spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
-      sectionName: https
+      sectionName: http
   hostnames:
-    - vaultwarden.local
+    - vaultwarden.fritz.box
   rules:
     - matches:
         - path:

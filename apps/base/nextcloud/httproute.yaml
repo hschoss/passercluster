@@ -7,9 +7,9 @@ spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
-      sectionName: https
+      sectionName: http
   hostnames:
-    - nextcloud.local
+    - nextcloud.fritz.box
   rules:
     - matches:
         - path:

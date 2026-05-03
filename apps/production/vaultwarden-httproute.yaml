@@ -5,4 +5,4 @@ metadata:
   namespace: vaultwarden
 spec:
   hostnames:
-    - vaultwarden.passer.com
+    - vaultwarden.fritz.box

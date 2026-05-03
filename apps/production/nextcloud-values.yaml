@@ -9,7 +9,7 @@ spec:
       version: ">=1.0.0"
   values:
     nextcloud:
-      host: nextcloud.passer.com
+      host: nextcloud.fritz.box
     persistence:
       size: 20Gi
     mariadb:
