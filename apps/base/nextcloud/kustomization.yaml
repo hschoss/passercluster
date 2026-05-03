@@ -6,3 +6,5 @@ resources:
   - repository.yaml
   - release.yaml
   - httproute.yaml
+  - nextcloud-credentials.secret.yaml
+  - nextcloud-db.secret.yaml
