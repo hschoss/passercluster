@@ -12,9 +12,7 @@ data:
   AdGuardHome.yaml: |
     bind_host: 0.0.0.0
     bind_port: 3000
-    users:
-      - name: admin
-        password: $2a$10$placeholder_change_me
+    users: []
     dns:
       bind_hosts:
         - 0.0.0.0
