@@ -4,3 +4,4 @@ resources:
   - cert-manager.yaml
   - envoy-gateway.yaml
   - metallb.yaml
+  - adguard.yaml

@@ -4,3 +4,6 @@ resources:
   - cluster-issuers.yaml
   - gateway.yaml
   - metallb-config.yaml
+  - selfsigned-issuer.yaml
+  - wildcard-cert.yaml
+  - adguard-httproute.yaml

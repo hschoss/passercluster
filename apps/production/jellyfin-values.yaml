@@ -1,0 +1,15 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyfin
+  namespace: jellyfin
+spec:
+  chart:
+    spec:
+      version: ">=1.0.0"
+  values:
+    persistence:
+      config:
+        size: 2Gi
+      media:
+        size: 50Gi

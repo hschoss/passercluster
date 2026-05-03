@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: passer-wildcard
+  namespace: envoy-gateway-system
+spec:
+  secretName: passer-wildcard-tls
+  duration: 8760h     # 1 year
+  renewBefore: 720h   # renew 30 days early
+  issuerRef:
+    name: passer-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.passer.com"
+    - "passer.com"

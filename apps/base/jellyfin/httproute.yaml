@@ -1,20 +1,20 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: nextcloud
-  namespace: nextcloud
+  name: jellyfin
+  namespace: jellyfin
 spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - nextcloud.local
+    - jellyfin.local
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: nextcloud
-          port: 8080
+        - name: jellyfin
+          port: 8096

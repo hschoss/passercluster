@@ -1,20 +1,20 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: nextcloud
-  namespace: nextcloud
+  name: adguard
+  namespace: adguard
 spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - nextcloud.local
+    - adguard.passer.com
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: nextcloud
-          port: 8080
+        - name: adguard-admin
+          port: 3000
