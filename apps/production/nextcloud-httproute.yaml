@@ -5,4 +5,4 @@ metadata:
   namespace: nextcloud
 spec:
   hostnames:
-    - nextcloud.production
+    - nextcloud.passer.com
