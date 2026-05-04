@@ -60,4 +60,5 @@ spec:
           enabled: true
           type: persistentVolumeClaim
           storageClass: longhorn-nvme-201
+          accessMode: ReadWriteOnce
           size: 10Gi
