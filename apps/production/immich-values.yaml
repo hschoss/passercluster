@@ -5,9 +5,6 @@ metadata:
   namespace: immich
 spec:
   values:
-    persistence:
-      library:
-        size: 900Gi
     postgresql:
       primary:
         persistence:

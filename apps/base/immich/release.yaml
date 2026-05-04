@@ -23,11 +23,10 @@ spec:
       strategy: rollback
       retries: 3
   values:
-    persistence:
-      library:
-        accessMode: ReadWriteOnce
-        storageClass: longhorn-nvme-201
-        size: 100Gi
+    immich:
+      persistence:
+        library:
+          existingClaim: immich-library
     postgresql:
       enabled: true
       auth:
