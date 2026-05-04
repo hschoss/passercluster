@@ -44,6 +44,9 @@ spec:
       enabled: true
       auth:
         enabled: false
+      image:
+        repository: redis
+        tag: "7.2"
       master:
         persistence:
           enabled: true
