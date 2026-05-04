@@ -5,21 +5,17 @@ metadata:
   namespace: immich
 spec:
   interval: 30m
-
   chartRef:
     kind: OCIRepository
     name: immich
-
   install:
     remediation:
       retries: 3
-
   upgrade:
     cleanupOnFail: true
     remediation:
       strategy: rollback
       retries: 3
-
   values:
     controllers:
       main:
@@ -39,11 +35,11 @@ spec:
                     key: password
               REDIS_HOSTNAME: immich-valkey
               IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning:3003
-                
     immich:
       persistence:
         library:
           existingClaim: immich-library
+    
     valkey:
       enabled: true
       persistence:
@@ -52,13 +48,11 @@ spec:
           type: persistentVolumeClaim
           storageClass: longhorn-nvme-201
           size: 2Gi
-    
     server:
       enabled: true
       ingress:
         main:
           enabled: false
-
     machine-learning:
       enabled: true
       persistence:
