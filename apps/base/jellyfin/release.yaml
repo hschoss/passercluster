@@ -26,12 +26,12 @@ spec:
     persistence:
       config:
         enabled: true
-        storageClass: longhorn
+        storageClass: longhorn-media
         accessMode: ReadWriteOnce
         size: 3Gi
       media:
         enabled: true
-        storageClass: longhorn
+        storageClass: longhorn-media
         accessMode: ReadWriteOnce
         size: 50Gi
     ingress:

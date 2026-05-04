@@ -1,0 +1,51 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-nvme-201
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  diskSelector: "nvme-201"
+  nodeSelector: "nvme-201"
+  dataLocality: "strict-local"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-nvme-202
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  diskSelector: "nvme-202"
+  nodeSelector: "nvme-202"
+  dataLocality: "strict-local"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-media
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  diskSelector: "media"
+  nodeSelector: "media"
+  dataLocality: "strict-local"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-backup
+provisioner: driver.longhorn.io
+parameters:
+  numberOfReplicas: "1"
+  diskSelector: "backup"
+  nodeSelector: "backup"
+  dataLocality: "strict-local"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate

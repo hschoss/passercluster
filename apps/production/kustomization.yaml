@@ -5,6 +5,7 @@ resources:
   - ../base/nextcloud
   - ../base/jellyfin
   - ../base/vaultwarden
+  - ../base/immich
 patches:
   - path: podinfo-values.yaml
     target:
@@ -34,3 +35,11 @@ patches:
     target:
       kind: HTTPRoute
       name: vaultwarden
+  - path: immich-values.yaml
+    target:
+      kind: HelmRelease
+      name: immich
+  - path: immich-httproute.yaml
+    target:
+      kind: HTTPRoute
+      name: immich

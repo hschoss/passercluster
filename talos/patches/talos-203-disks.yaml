@@ -1,0 +1,8 @@
+machine:
+  disks:
+    - device: /dev/sdg
+      partitions:
+        - mountpoint: /var/mnt/longhorn-hdd1
+    - device: /dev/sdh
+      partitions:
+        - mountpoint: /var/mnt/longhorn-hdd2

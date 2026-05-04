@@ -10,6 +10,6 @@ spec:
   values:
     persistence:
       config:
-        size: 3Gi
+        size: 10Gi
       media:
-        size: 50Gi
+        size: 3800Gi
