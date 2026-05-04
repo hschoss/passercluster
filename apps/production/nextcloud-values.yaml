@@ -10,9 +10,13 @@ spec:
   values:
     nextcloud:
       host: nextcloud.fritz.box
+    nodeSelector:
+      kubernetes.io/hostname: talos-to0-jkk
     persistence:
       size: 500Gi
     mariadb:
       primary:
+        nodeSelector:
+          kubernetes.io/hostname: talos-to0-jkk
         persistence:
           size: 20Gi

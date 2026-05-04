@@ -5,11 +5,24 @@ metadata:
   namespace: immich
 spec:
   values:
+    server:
+      nodeSelector:
+        kubernetes.io/hostname: talos-byo-5ko
+    microservices:
+      nodeSelector:
+        kubernetes.io/hostname: talos-byo-5ko
+    machine-learning:
+      nodeSelector:
+        kubernetes.io/hostname: talos-byo-5ko
     postgresql:
       primary:
+        nodeSelector:
+          kubernetes.io/hostname: talos-byo-5ko
         persistence:
           size: 50Gi
     redis:
       master:
+        nodeSelector:
+          kubernetes.io/hostname: talos-byo-5ko
         persistence:
           size: 5Gi
