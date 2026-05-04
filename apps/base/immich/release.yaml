@@ -47,6 +47,8 @@ spec:
       image:
         repository: redis
         tag: "7.2"
+      networkPolicy:
+        enabled: false
       master:
         persistence:
           enabled: true
