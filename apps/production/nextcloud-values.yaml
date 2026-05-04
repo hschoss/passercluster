@@ -11,7 +11,7 @@ spec:
     nextcloud:
       host: nextcloud.fritz.box
     persistence:
-      size: 1900Gi
+      size: 500Gi
     mariadb:
       primary:
         persistence:
