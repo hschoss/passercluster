@@ -5,55 +5,65 @@ metadata:
   namespace: immich
 spec:
   interval: 30m
-  chart:
-    spec:
-      chart: immich
-      version: ">=0.7.0 <0.9.0"
-      sourceRef:
-        kind: HelmRepository
-        name: immich
-        namespace: immich
-      interval: 12h
+
+  chartRef:
+    kind: OCIRepository
+    name: immich
+
   install:
     remediation:
       retries: 3
+
   upgrade:
     cleanupOnFail: true
     remediation:
       strategy: rollback
       retries: 3
+
   values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              tag: v2.6.3
+            env:
+              DB_HOSTNAME: immich-postgres-rw
+              DB_PORT: "5432"
+              DB_DATABASE_NAME: immich
+              DB_USERNAME: immich
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-db
+                    key: password
+              REDIS_HOSTNAME: immich-valkey
+              IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning:3003
+                
     immich:
       persistence:
         library:
           existingClaim: immich-library
-    postgresql:
+    valkey:
       enabled: true
-      auth:
-        database: immich
-        username: immich
-        existingSecret: immich-db
-        secretKeys:
-          adminPasswordKey: postgres-password
-          userPasswordKey: password
-      primary:
-        persistence:
-          storageClass: longhorn-nvme-201
-          size: 20Gi
-    redis:
-      enabled: true
-      auth:
-        enabled: false
-      image:
-        repository: redis
-        tag: "7.2"
-      networkPolicy:
-        enabled: false
-      master:
-        persistence:
+      persistence:
+        data:
           enabled: true
+          type: persistentVolumeClaim
           storageClass: longhorn-nvme-201
           size: 2Gi
-    ingress:
-      main:
-        enabled: false
+    
+    server:
+      enabled: true
+      ingress:
+        main:
+          enabled: false
+
+    machine-learning:
+      enabled: true
+      persistence:
+        cache:
+          enabled: true
+          type: persistentVolumeClaim
+          storageClass: longhorn-nvme-201
+          size: 10Gi

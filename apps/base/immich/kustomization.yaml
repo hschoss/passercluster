@@ -7,3 +7,5 @@ resources:
   - release.yaml
   - httproute.yaml
   - immich-db.secret.yaml
+  - postgres.yaml
+  - oci-repository.yaml
