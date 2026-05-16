@@ -5,7 +5,3 @@ resources:
   - metallb-config.yaml
   - longhorn-httproute.yaml
   - storageclasses.yaml
-  - velero.yaml
-  - minio-credentials.secret.yaml
-  - velero-credentials.secret.yaml
-  - velero-schedules.yaml
