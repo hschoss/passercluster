@@ -1,0 +1,6 @@
+# Node 200 / 192.168.178.200: control plane only.
+# Longhorn data disks are intentionally not declared on this node.
+machine:
+  install:
+    disk: /dev/nvme0n1
+  disks: []

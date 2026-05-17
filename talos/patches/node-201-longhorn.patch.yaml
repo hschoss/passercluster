@@ -1,0 +1,9 @@
+# Node 201 / 192.168.178.201: shared OS + performance-secondary NVMe.
+# Talos remains installed on /dev/nvme0n1; Longhorn uses the remaining partition.
+machine:
+  install:
+    disk: /dev/nvme0n1
+  disks:
+    - device: /dev/nvme0n1
+      partitions:
+        - mountpoint: /var/mnt/longhorn-performance-secondary

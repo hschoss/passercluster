@@ -1,0 +1,68 @@
+---
+# Template only: copy into the owning application namespace before use.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data
+  namespace: nextcloud
+  labels:
+    app.kubernetes.io/name: nextcloud
+    app.kubernetes.io/part-of: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-nextcloud-fast
+  resources:
+    requests:
+      storage: 1.5Ti
+---
+# Template only: copy into the owning application namespace before use.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-data
+  namespace: immich
+  labels:
+    app.kubernetes.io/name: immich
+    app.kubernetes.io/part-of: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-immich-fast
+  resources:
+    requests:
+      storage: 1Ti
+---
+# Template only: copy into the owning application namespace before use.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-media
+  namespace: jellyfin
+  labels:
+    app.kubernetes.io/name: jellyfin
+    app.kubernetes.io/part-of: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-jellyfin
+  resources:
+    requests:
+      storage: 4Ti
+---
+# Template only: copy into the owning application namespace before use.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: velero-storage
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/part-of: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-backup
+  resources:
+    requests:
+      storage: 500Gi

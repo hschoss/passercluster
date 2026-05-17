@@ -1,0 +1,14 @@
+# Node 203 / 192.168.178.203: OS on /dev/sdh, HDD capacity pool plus dedicated backup disk.
+machine:
+  install:
+    disk: /dev/sdh
+  disks:
+    - device: /dev/sdf
+      partitions:
+        - mountpoint: /var/mnt/longhorn-capacity-sdf
+    - device: /dev/sdg
+      partitions:
+        - mountpoint: /var/mnt/longhorn-capacity-sdg
+    - device: /dev/sdi
+      partitions:
+        - mountpoint: /var/mnt/longhorn-backup-sdi

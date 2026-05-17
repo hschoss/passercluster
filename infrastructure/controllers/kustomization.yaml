@@ -4,4 +4,5 @@ resources:
   - cert-manager.yaml
   - cloudnative-pg.yaml
   - envoy-gateway.yaml
+  - longhorn.yaml
   - metallb.yaml
