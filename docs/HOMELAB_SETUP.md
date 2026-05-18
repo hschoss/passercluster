@@ -6,7 +6,7 @@ This cluster uses `.homelab` names for private services only. FritzBox remains t
 
 - Primary client DNS: FritzBox.
 - Conditional forwarding zone: `homelab`.
-- Conditional forwarding target: `192.168.178.240`, the `homelab-coredns` LoadBalancer from `infrastructure/controllers/coredns.yaml`.
+- Conditional forwarding target: `192.168.178.241`, the `homelab-coredns` LoadBalancer from `infrastructure/controllers/coredns.yaml`.
 - Dynamic records: ExternalDNS watches Gateway API `HTTPRoute` objects and writes `.homelab` records to the CoreDNS etcd backend.
 - Failure behavior: if the cluster or CoreDNS is unavailable, `.homelab` lookups fail, but normal internet DNS continues through FritzBox.
 
@@ -17,7 +17,7 @@ This cluster uses `.homelab` names for private services only. FritzBox remains t
 3. Find the DNS or local DNS server settings for conditional forwarding.
 4. Add a conditional forwarding entry:
    - Domain: `homelab`
-   - DNS server: `192.168.178.240`
+   - DNS server: `192.168.178.241`
 5. Save the configuration.
 6. From a client on the LAN or VPN, test a service name:
 
@@ -47,7 +47,7 @@ nslookup vaultwarden.homelab
 curl -I https://vaultwarden.homelab
 ```
 
-If VPN clients use a different DNS server, add a VPN DNS rule that forwards `homelab` to FritzBox or directly to `192.168.178.240`.
+If VPN clients use a different DNS server, add a VPN DNS rule that forwards `homelab` to FritzBox or directly to `192.168.178.241`.
 
 ## Service URLs
 
@@ -78,4 +78,4 @@ kubectl get certificate -A
 kubectl get httproute -A
 ```
 
-The CoreDNS LoadBalancer IP must stay outside the FritzBox DHCP pool. The current MetalLB pool is `192.168.178.240-192.168.178.250`, and CoreDNS reserves `192.168.178.240`.
+The CoreDNS LoadBalancer IP must stay outside the FritzBox DHCP pool. The current MetalLB pool is `192.168.178.240-192.168.178.250`, Envoy uses `192.168.178.240`, and CoreDNS reserves `192.168.178.241`.
