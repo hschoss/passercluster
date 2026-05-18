@@ -51,17 +51,3 @@ spec:
               - name: envoy
                 namespace: envoy-gateway-system
                 kind: Gateway
----
-# Wildcard certificate consumed by the Envoy Gateway HTTPS listener.
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: wildcard-homelab
-  namespace: envoy-gateway-system
-spec:
-  secretName: wildcard-homelab-tls
-  dnsNames:
-    - "*.homelab"
-  issuerRef:
-    name: selfsigned-issuer
-    kind: ClusterIssuer
