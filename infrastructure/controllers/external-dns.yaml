@@ -12,6 +12,7 @@ metadata:
   name: external-dns-etcd
   namespace: external-dns
 spec:
+  clusterIP: 10.97.78.53
   selector:
     app.kubernetes.io/name: external-dns-etcd
   ports:

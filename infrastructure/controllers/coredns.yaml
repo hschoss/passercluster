@@ -65,7 +65,7 @@ spec:
             parameters: homelab
             configBlock: |-
               path /skydns
-              endpoint http://external-dns-etcd.external-dns.svc.cluster.local:2379
+              endpoint http://10.97.78.53:2379
           # Keep general DNS usable from this resolver when clients query non-homelab names.
           - name: forward
             parameters: . 1.1.1.1 9.9.9.9
