@@ -1,0 +1,9 @@
+# Node 202 / 192.168.178.202: current Talos OS on NVMe plus extra SSD storage.
+# Moving Talos OS to /dev/sdb requires a reinstall; this patch only adds /dev/sdb safely.
+machine:
+  install:
+    disk: /dev/nvme0n1
+  disks:
+    - device: /dev/disk/by-id/ata-Samsung_SSD_860_EVO_1TB_S3Z9NY0M718698X
+      partitions:
+        - mountpoint: /var/mnt/longhorn-sdb
