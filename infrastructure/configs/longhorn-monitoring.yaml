@@ -1,0 +1,79 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  endpoints:
+    - port: manager
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: longhorn-storage
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  groups:
+    - name: longhorn.storage
+      rules:
+        - alert: LonghornDiskUsageHigh
+          expr: (longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes) > 0.80
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn disk usage exceeds 80%
+        - alert: LonghornVolumeDegraded
+          expr: longhorn_volume_robustness == 2
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Longhorn volume is degraded
+        - alert: LonghornVolumePending
+          expr: longhorn_volume_state == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn volume is pending
+        - alert: LonghornBackupFailed
+          expr: increase(longhorn_backup_state{state="Error"}[1h]) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Longhorn backup failure detected
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-grafana-dashboard
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+    grafana_dashboard: "1"
+data:
+  longhorn-overview.json: |
+    {
+      "title": "Longhorn Storage Overview",
+      "schemaVersion": 39,
+      "version": 1,
+      "panels": []
+    }

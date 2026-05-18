@@ -1,0 +1,15 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        kubernetes.io/hostname: talos-3nt-pq2
+    valkey:
+      persistence:
+        data:
+          storageClass: longhorn-nvme-202
+          size: 5Gi
