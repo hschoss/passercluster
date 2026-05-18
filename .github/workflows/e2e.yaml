@@ -1,0 +1,58 @@
+name: e2e
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ '*' ]
+    tags-ignore: [ '*' ]
+
+jobs:
+  kubernetes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Flux
+        uses: fluxcd/flux2/action@main
+      - name: Setup Kubernetes
+        uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: flux
+          version: v0.30.0
+          node_image: kindest/node:v1.33.4
+      - name: Install Flux in Kubernetes Kind
+        run: flux install --components-extra source-watcher
+      - name: Setup cluster reconciliation
+        run: |
+          flux create source git flux-system \
+          --url=${{ github.event.repository.html_url }} \
+          --branch=${GITHUB_REF#refs/heads/} \
+          --username=${GITHUB_ACTOR} \
+          --password=${{ secrets.GITHUB_TOKEN }} \
+          --ignore-paths="clusters/**/flux-system/"
+          flux create kustomization flux-system \
+          --source=flux-system \
+          --path=./clusters/staging
+      - name: Verify cluster reconciliation
+        run: |
+          kubectl -n flux-system wait kustomization/infra-controllers --for=condition=ready --timeout=5m
+          kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=5m
+      - name: Verify helm reconciliation
+        run: |
+          kubectl -n podinfo wait helmrelease/podinfo --for=condition=ready --timeout=5m
+      - name: Verify gateway routing
+        run: |
+          kubectl -n envoy-gateway-system port-forward \
+            $(kubectl -n envoy-gateway-system get svc -l gateway.envoyproxy.io/owning-gateway-name=envoy -o name) 8080:80 &
+          sleep 5
+          curl -sSf -H "Host: podinfo.staging" http://localhost:8080
+      - name: List deployed resources
+        run: flux tree ks flux-system
+      - name: Debug failure
+        if: failure()
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/helm-controller
+          flux get all --all-namespaces
