@@ -111,11 +111,14 @@ spec:
     policy: sync
     registry: noop
     txtOwnerId: passercluster
+    env:
+      # CoreDNS provider reads its etcd endpoint from ETCD_URLS.
+      - name: ETCD_URLS
+        value: http://external-dns-etcd.external-dns.svc.cluster.local:2379
     extraArgs:
       - --gateway-name=envoy
       - --gateway-namespace=envoy-gateway-system
       - --coredns-prefix=/skydns/
-      - --etcd-urls=http://external-dns-etcd.external-dns.svc.cluster.local:2379
       - --ignore-ingress-tls-spec
     rbac:
       create: true
