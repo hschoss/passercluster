@@ -11,6 +11,8 @@ kind: Gateway
 metadata:
   name: envoy
   namespace: envoy-gateway-system
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
   gatewayClassName: envoy
   listeners:
