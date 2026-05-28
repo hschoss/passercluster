@@ -45,12 +45,12 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.passer.local"
+      hostname: "*.passer.home.arpa"
       tls:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: wildcard-passer-local-tls
+            name: wildcard-passer.home.arpa-tls
       allowedRoutes:
         namespaces:
           from: All

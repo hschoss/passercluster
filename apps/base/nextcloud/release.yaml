@@ -21,7 +21,7 @@ spec:
       name: RetryOnFailure
   values:
     nextcloud:
-      host: nextcloud.passer.local
+      host: nextcloud.passer.home.arpa
       existingSecret:
         enabled: true
         secretName: nextcloud-credentials
@@ -37,8 +37,8 @@ spec:
         domain.config.php: |-
           <?php
           $CONFIG = array(
-            'trusted_domains' => ['nextcloud.passer.local', 'localhost'],
-            'overwrite.cli.url' => 'https://nextcloud.passer.local',
+            'trusted_domains' => ['nextcloud.passer.home.arpa', 'home.arpahost'],
+            'overwrite.cli.url' => 'https://nextcloud.passer.home.arpa',
           );
     persistence:
       enabled: true
@@ -58,15 +58,15 @@ spec:
     livenessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.local
+          value: nextcloud.passer.home.arpa
     readinessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.local
+          value: nextcloud.passer.home.arpa
     startupProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.passer.local
+          value: nextcloud.passer.home.arpa
     phpClientHttpsFix:
       enabled: false
     ingress:

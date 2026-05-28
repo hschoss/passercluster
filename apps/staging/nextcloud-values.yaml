@@ -9,28 +9,28 @@ spec:
       version: ">=1.0.0-alpha"
   values:
     nextcloud:
-      host: nextcloud-staging.passer.local
+      host: nextcloud-staging.passer.home.arpa
       configs:
         domain.config.php: |-
           <?php
           $CONFIG = array(
-            'trusted_domains' => ['nextcloud-staging.passer.local', 'localhost'],
-            'overwrite.cli.url' => 'https://nextcloud-staging.passer.local',
+            'trusted_domains' => ['nextcloud-staging.passer.home.arpa', .home.arpahost'],
+            'overwrite.cli.url' => 'https://nextcloud-staging.passer.home.arpa',
           );
     persistence:
       size: 4Gi
     livenessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.passer.local
+          value: nextcloud-staging.passer.home.arpa
     readinessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.passer.local
+          value: nextcloud-staging.passer.home.arpa
     startupProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.passer.local
+          value: nextcloud-staging.passer.home.arpa
     mariadb:
       primary:
         persistence:

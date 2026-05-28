@@ -46,7 +46,7 @@ spec:
             - --name=external-dns-etcd
             - --data-dir=/var/lib/etcd
             - --listen-client-urls=http://0.0.0.0:2379
-            - --advertise-client-urls=http://external-dns-etcd.external-dns.svc.cluster.local:2379
+            - --advertise-client-urls=http://external-dns-etcd.external-dns.svc.cluster.home.arpa:2379
           ports:
             - name: client
               containerPort: 2379
@@ -108,14 +108,14 @@ spec:
       - gateway-httproute
       - service
     domainFilters:
-      - passer.local
+      - passer.home.arpa
     policy: sync
     registry: noop
     txtOwnerId: passercluster
     env:
       # CoreDNS provider reads its etcd endpoint from ETCD_URLS.
       - name: ETCD_URLS
-        value: http://external-dns-etcd.external-dns.svc.cluster.local:2379
+        value: http://external-dns-etcd.external-dns.svc.cluster.home.arpa:2379
     extraArgs:
       - --gateway-name=envoy
       - --gateway-namespace=envoy-gateway-system

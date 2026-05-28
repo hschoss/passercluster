@@ -14,7 +14,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - jellyfin.passer.local
+    - jellyfin.passer.home.arpa
   rules:
     - matches:
         - path:
