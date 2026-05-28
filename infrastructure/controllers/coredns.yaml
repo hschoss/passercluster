@@ -41,7 +41,7 @@ spec:
     replicaCount: 2
     serviceType: LoadBalancer
     service:
-      # FritzBox conditional forwarding should point the passer.local zone at this IP.
+      # FritzBox conditional forwarding should point the passer.home.arpa zone at this IP.
       # Envoy uses the first MetalLB address, so CoreDNS reserves the next address.
       loadBalancerIP: 192.168.178.241
       annotations:
@@ -61,13 +61,13 @@ spec:
             parameters: . "{remote} {type} {class} {name} {rcode} {duration}"
           - name: prometheus
             parameters: 0.0.0.0:9153
-          # ExternalDNS writes .passer.local records into etcd using the CoreDNS provider.
+          # ExternalDNS writes .passer.home.arpa records into etcd using the CoreDNS provider.
           - name: etcd
-            parameters: passer.local
+            parameters: passer.home.arpa
             configBlock: |-
               path /skydns
               endpoint http://10.97.78.53:2379
-          # Keep general DNS usable from this resolver when clients query non-passer.local names.
+          # Keep general DNS usable from this resolver when clients query non-passer.home.arpa names.
           - name: forward
             parameters: . 1.1.1.1 9.9.9.9
           - name: cache
