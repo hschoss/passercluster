@@ -5,6 +5,26 @@ metadata:
   name: envoy
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: envoy-static-lb
+    namespace: envoy-gateway-system
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy-static-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: LoadBalancer
+        loadBalancerIP: 192.168.178.240
+        annotations:
+          metallb.universe.tf/address-pool: lan-pool
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
@@ -25,12 +45,12 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.homelab"
+      hostname: "*.passer.local"
       tls:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: wildcard-homelab-tls
+            name: wildcard-passer-local-tls
       allowedRoutes:
         namespaces:
           from: All

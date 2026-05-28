@@ -9,28 +9,28 @@ spec:
       version: ">=1.0.0-alpha"
   values:
     nextcloud:
-      host: nextcloud-staging.homelab
+      host: nextcloud-staging.passer.local
       configs:
         domain.config.php: |-
           <?php
           $CONFIG = array(
-            'trusted_domains' => ['nextcloud-staging.homelab', 'localhost'],
-            'overwrite.cli.url' => 'https://nextcloud-staging.homelab',
+            'trusted_domains' => ['nextcloud-staging.passer.local', 'localhost'],
+            'overwrite.cli.url' => 'https://nextcloud-staging.passer.local',
           );
     persistence:
       size: 4Gi
     livenessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.homelab
+          value: nextcloud-staging.passer.local
     readinessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.homelab
+          value: nextcloud-staging.passer.local
     startupProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud-staging.homelab
+          value: nextcloud-staging.passer.local
     mariadb:
       primary:
         persistence:

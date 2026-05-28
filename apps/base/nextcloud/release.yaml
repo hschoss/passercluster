@@ -21,7 +21,7 @@ spec:
       name: RetryOnFailure
   values:
     nextcloud:
-      host: nextcloud.homelab
+      host: nextcloud.passer.local
       existingSecret:
         enabled: true
         secretName: nextcloud-credentials
@@ -37,8 +37,8 @@ spec:
         domain.config.php: |-
           <?php
           $CONFIG = array(
-            'trusted_domains' => ['nextcloud.homelab', 'localhost'],
-            'overwrite.cli.url' => 'https://nextcloud.homelab',
+            'trusted_domains' => ['nextcloud.passer.local', 'localhost'],
+            'overwrite.cli.url' => 'https://nextcloud.passer.local',
           );
     persistence:
       enabled: true
@@ -58,15 +58,15 @@ spec:
     livenessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.homelab
+          value: nextcloud.passer.local
     readinessProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.homelab
+          value: nextcloud.passer.local
     startupProbe:
       httpHeaders:
         - name: Host
-          value: nextcloud.homelab
+          value: nextcloud.passer.local
     phpClientHttpsFix:
       enabled: false
     ingress:

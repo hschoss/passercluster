@@ -9,9 +9,12 @@ spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
+      sectionName: http
+    - name: envoy
+      namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - nextcloud.homelab
+    - nextcloud.passer.local
   rules:
     - matches:
         - path:
