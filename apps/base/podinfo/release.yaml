@@ -30,9 +30,12 @@ spec:
       parentRefs:
         - name: envoy
           namespace: envoy-gateway-system
+          sectionName: http
+        - name: envoy
+          namespace: envoy-gateway-system
           sectionName: https
       hostnames:
-        - podinfo.homelab
+        - podinfo.passer.local
       rules:
         - matches:
             - path:

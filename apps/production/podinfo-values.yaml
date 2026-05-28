@@ -10,4 +10,4 @@ spec:
   values:
     httpRoute:
       hostnames:
-        - podinfo.homelab
+        - podinfo.passer.local

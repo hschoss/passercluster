@@ -5,4 +5,4 @@ metadata:
   namespace: immich
 spec:
   hostnames:
-    - immich.homelab
+    - immich.passer.local

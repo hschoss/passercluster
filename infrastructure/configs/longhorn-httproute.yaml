@@ -9,9 +9,12 @@ spec:
   parentRefs:
     - name: envoy
       namespace: envoy-gateway-system
+      sectionName: http
+    - name: envoy
+      namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - longhorn.homelab
+    - longhorn.passer.local
   rules:
     - matches:
         - path:

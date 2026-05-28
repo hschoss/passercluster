@@ -108,7 +108,7 @@ spec:
       - gateway-httproute
       - service
     domainFilters:
-      - homelab
+      - passer.local
     policy: sync
     registry: noop
     txtOwnerId: passercluster

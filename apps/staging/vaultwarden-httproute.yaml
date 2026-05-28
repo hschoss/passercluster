@@ -5,4 +5,4 @@ metadata:
   namespace: vaultwarden
 spec:
   hostnames:
-    - vaultwarden-staging.homelab
+    - vaultwarden-staging.passer.local
