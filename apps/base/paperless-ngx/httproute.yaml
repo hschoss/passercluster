@@ -1,0 +1,8 @@
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: envoy
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - paperless.passer.home.arpa
