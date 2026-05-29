@@ -21,13 +21,23 @@ spec:
     persistence:
       data:
         enabled: true
-        storageClass: ""   # fill in your StorageClass
+        storageClass: longhorn-immich-fast
+        accessMode: ReadWriteOnce
         size: 10Gi
       media:
         enabled: true
+        storageClass: longhorn-immich-fast
+        accessMode: ReadWriteOnce
         size: 50Gi
+      export:
+        enabled: true
+        storageClass: longhorn-immich-fast
+        accessMode: ReadWriteOnce
+        size: 5Gi
       consume:
         enabled: true
+        storageClass: longhorn-immich-fast
+        accessMode: ReadWriteOnce
         size: 5Gi
     postgresql:
       enabled: true
