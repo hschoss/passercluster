@@ -14,10 +14,13 @@ spec:
         name: paperless-ngx
         namespace: paperless-ngx
   values:
+    global:
+      security:
+        allowInsecureImages: true
     env:
       PAPERLESS_TIME_ZONE: Europe/Berlin
       PAPERLESS_OCR_LANGUAGE: deu+eng
-      PAPERLESS_URL: https://paperless.your-domain.com
+      PAPERLESS_URL: https://paperless.passer.home.arpa
     persistence:
       data:
         enabled: true
