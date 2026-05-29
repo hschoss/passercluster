@@ -6,6 +6,7 @@ resources:
   - ../base/jellyfin
   - ../base/vaultwarden
   - ../base/immich
+  - ../base/paperless-ngx
 patches:
   - path: podinfo-values.yaml
     target:
@@ -43,3 +44,7 @@ patches:
     target:
       kind: HTTPRoute
       name: immich
+  - path: paperless-ngx-values.yaml
+    target:
+      kind: HelmRelease
+      name: paperless-ngx
