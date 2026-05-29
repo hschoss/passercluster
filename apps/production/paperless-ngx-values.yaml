@@ -11,14 +11,15 @@ spec:
     env:
       PAPERLESS_URL: https://paperless.passer.home.arpa
     ingress:
-      enabled: true
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
-      hosts:
-        - host: paperless.passer.home.arpa
-          paths:
-            - path: /
-      tls:
-        - secretName: paperless-tls
-          hosts:
-            - paperless.passer.home.arpa
+      main:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt
+        hosts:
+          - host: paperless.passer.home.arpa
+            paths:
+              - path: /
+        tls:
+          - secretName: paperless-tls
+            hosts:
+              - paperless.passer.home.arpa
