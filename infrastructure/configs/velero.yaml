@@ -3,6 +3,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: velero
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
 ---
 # MinIO — lightweight S3-compatible backup store backed by longhorn-backup (sdh on .203)
 apiVersion: v1
@@ -34,6 +38,8 @@ spec:
       labels:
         app: minio
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: talos-w45-5vh
       containers:
         - name: minio
           image: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
