@@ -13,10 +13,17 @@ spec:
         kind: HelmRepository
         name: paperless-ngx
         namespace: paperless-ngx
+
   values:
     global:
       security:
         allowInsecureImages: true
+
+    ingress:
+      enabled: false
+      main:
+        enabled: false
+
     env:
       PAPERLESS_TIME_ZONE: Europe/Berlin
       PAPERLESS_OCR_LANGUAGE: deu+eng
