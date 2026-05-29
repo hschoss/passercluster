@@ -41,8 +41,12 @@ spec:
         size: 5Gi
     postgresql:
       enabled: true
+      image:
+        repository: bitnamilegacy/postgresql
     redis:
       enabled: true
+      image:
+        repository: bitnamilegacy/redis
   valuesFrom:
     - kind: Secret
       name: paperless-ngx-secret
