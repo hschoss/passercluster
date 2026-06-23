@@ -1,0 +1,72 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-performance-6h
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  cron: "0 */6 * * *"
+  task: snapshot
+  retain: 10
+  concurrency: 2
+  groups:
+    - performance
+  labels:
+    storage-tier: performance
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-capacity-daily
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  cron: "0 2 * * *"
+  task: snapshot
+  retain: 10
+  concurrency: 1
+  groups:
+    - capacity
+  labels:
+    storage-tier: capacity
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-backup-daily
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  cron: "0 3 * * *"
+  task: snapshot
+  retain: 10
+  concurrency: 1
+  groups:
+    - backup
+  labels:
+    storage-tier: backup
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-s3-daily
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  cron: "30 3 * * *"
+  task: backup
+  retain: 7
+  concurrency: 1
+  groups:
+    - external-backup
+  labels:
+    backup-target: s3

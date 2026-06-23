@@ -1,0 +1,72 @@
+---
+# Performance-primary tier for Nextcloud: Node 202 NVMe only.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-nextcloud-fast
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+    storage.passercluster.io/tier: performance-primary
+  annotations:
+    storage.passercluster.io/purpose: Nextcloud primary data on Node 202 NVMe
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "1"
+  dataLocality: best-effort
+  replicaAutoBalance: best-effort
+  fsType: ext4
+  nodeSelector: performance-primary
+  diskSelector: nvme,node-202
+  recurringJobSelector: '[{"name":"snapshot-performance-6h","isGroup":false}]'
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+# Performance tier for Immich: prefer scheduling workloads on Node 202, storage can fall back to Node 201.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-immich-fast
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+    storage.passercluster.io/tier: performance
+  annotations:
+    storage.passercluster.io/purpose: Immich data on Node 202 or Node 201 NVMe
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "1"
+  dataLocality: best-effort
+  replicaAutoBalance: best-effort
+  fsType: ext4
+  nodeSelector: performance
+  diskSelector: nvme
+  recurringJobSelector: '[{"name":"snapshot-performance-6h","isGroup":false}]'
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+# Capacity tier for Jellyfin: Node 203 HDD pool only.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-jellyfin
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+    storage.passercluster.io/tier: capacity
+  annotations:
+    storage.passercluster.io/purpose: Jellyfin media on Node 203 capacity HDDs
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "1"
+  dataLocality: best-effort
+  replicaAutoBalance: best-effort
+  fsType: ext4
+  nodeSelector: capacity
+  diskSelector: hdd,capacity
+  recurringJobSelector: '[{"name":"snapshot-capacity-daily","isGroup":false}]'
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer

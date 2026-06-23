@@ -5,4 +5,4 @@ metadata:
   namespace: immich
 spec:
   hostnames:
-    - immich.passer.home.arpa
+    - immich.passer.lan
