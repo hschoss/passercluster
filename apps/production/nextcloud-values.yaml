@@ -9,7 +9,7 @@ spec:
       version: ">=1.0.0"
   values:
     nextcloud:
-      host: nextcloud.passer.home.arpa
+      host: nextcloud.passer.lan
     nodeSelector:
       kubernetes.io/hostname: talos-3nt-pq2
     persistence:

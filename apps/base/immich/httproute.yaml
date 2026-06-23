@@ -14,7 +14,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - immich.passer.home.arpa
+    - immich.passer.lan
   rules:
     - matches:
         - path:

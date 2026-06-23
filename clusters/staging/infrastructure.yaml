@@ -12,7 +12,8 @@ spec:
   sourceRef:
     kind: ExternalArtifact
     name: infrastructure
-  path: ./controllers
+  # Staging (and the KinD e2e workflow) only installs a minimal set of controllers.
+  path: ./controllers/staging
   prune: true
   wait: true
 ---
@@ -31,7 +32,7 @@ spec:
   sourceRef:
     kind: ExternalArtifact
     name: infrastructure
-  path: ./configs
+  path: ./configs/staging
   prune: true
   patches:
     - patch: |

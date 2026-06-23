@@ -12,7 +12,7 @@ spec:
   sourceRef:
     kind: ExternalArtifact
     name: infrastructure
-  path: ./controllers
+  path: ./controllers/production
   prune: true
   wait: true
   decryption:
@@ -35,7 +35,7 @@ spec:
   sourceRef:
     kind: ExternalArtifact
     name: infrastructure
-  path: ./configs
+  path: ./configs/production
   prune: true
   decryption:
     provider: sops

@@ -23,7 +23,7 @@ spec:
     env:
       PAPERLESS_TIME_ZONE: Europe/Berlin
       PAPERLESS_OCR_LANGUAGE: deu+eng
-      PAPERLESS_URL: https://paperless.passer.home.arpa
+      PAPERLESS_URL: https://paperless.passer.lan
     persistence:
       data:
         enabled: true
@@ -58,4 +58,11 @@ spec:
       name: paperless-ngx-secret
       valuesKey: PAPERLESS_ADMIN_USER
       targetPath: env.PAPERLESS_ADMIN_USER
-    # repeat for PASSWORD and SECRET_KEY
+    - kind: Secret
+      name: paperless-ngx-secret
+      valuesKey: PAPERLESS_ADMIN_PASSWORD
+      targetPath: env.PAPERLESS_ADMIN_PASSWORD
+    - kind: Secret
+      name: paperless-ngx-secret
+      valuesKey: PAPERLESS_SECRET_KEY
+      targetPath: env.PAPERLESS_SECRET_KEY

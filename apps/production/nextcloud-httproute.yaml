@@ -5,4 +5,4 @@ metadata:
   namespace: nextcloud
 spec:
   hostnames:
-    - nextcloud.passer.home.arpa
+    - nextcloud.passer.lan

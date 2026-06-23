@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cluster-issuers.yaml
+  - gateway.yaml
+  - metallb-config.yaml
+  - longhorn-httproute.yaml
+  - storageclasses.yaml
+  - longhorn-node-labels.yaml
+  - longhorn-recurring-jobs.yaml
+  - longhorn-storage-classes.yaml

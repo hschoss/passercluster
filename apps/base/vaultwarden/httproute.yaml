@@ -14,7 +14,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - vaultwarden.passer.home.arpa
+    - vaultwarden.passer.lan
   rules:
     - matches:
         - path:

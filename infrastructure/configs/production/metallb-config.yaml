@@ -1,0 +1,20 @@
+---
+# Adjust this range to a free block in your LAN that is outside your router's DHCP pool.
+# Current LAN: 192.168.178.0/24 — nodes are .200-.203, so .240-.250 is safe.
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lan-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.178.240-192.168.178.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: lan-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - lan-pool

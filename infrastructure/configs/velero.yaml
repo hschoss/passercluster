@@ -107,7 +107,7 @@ spec:
             - until wget -qO- http://minio.velero.svc.cluster.local:9000/minio/health/ready; do sleep 5; done
       containers:
         - name: mc
-          image: quay.io/minio/mc:RELEASE.2024-12-18T10-25-51Z
+          image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
           command:
             - sh
             - -c

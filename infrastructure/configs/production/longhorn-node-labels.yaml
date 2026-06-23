@@ -1,0 +1,171 @@
+---
+# Node 200: control plane only; Longhorn components may run, but no disks are scheduled.
+apiVersion: v1
+kind: Node
+metadata:
+  name: talos-2sm-xkd
+  labels:
+    storage.passercluster.io/longhorn: disabled
+    storage.passercluster.io/node-id: "200"
+    node.longhorn.io/create-default-disk: "false"
+---
+# Node 201: performance secondary NVMe tier.
+apiVersion: v1
+kind: Node
+metadata:
+  name: talos-z8c-je7
+  labels:
+    storage-tier: performance-secondary
+    disk-type: nvme
+    storage.passercluster.io/longhorn: enabled
+    storage.passercluster.io/node-id: "201"
+    node.longhorn.io/create-default-disk: "false"
+---
+# Node 202: performance primary NVMe tier.
+apiVersion: v1
+kind: Node
+metadata:
+  name: talos-3nt-pq2
+  labels:
+    storage-tier: performance
+    disk-type: nvme
+    storage.passercluster.io/longhorn: enabled
+    storage.passercluster.io/node-id: "202"
+    node.longhorn.io/create-default-disk: "false"
+---
+# Node 203: capacity and backup tiers.
+apiVersion: v1
+kind: Node
+metadata:
+  name: talos-w45-5vh
+  labels:
+    storage-tier: capacity
+    disk-type: hdd
+    storage.passercluster.io/longhorn: enabled
+    storage.passercluster.io/node-id: "203"
+    node.longhorn.io/create-default-disk: "false"
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-2sm-xkd
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: false
+  tags: []
+  disks:
+    default-disk-1030400000000:
+      path: /var/lib/longhorn
+      allowScheduling: false
+      evictionRequested: false
+      storageReserved: 25362624921
+      tags: []
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-z8c-je7
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: true
+  tags:
+    - performance
+    - performance-secondary
+    - nvme
+    - nvme-201
+  disks:
+    default-disk-1030400000000:
+      path: /var/lib/longhorn/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 99740687564
+      tags:
+        - nvme
+        - node-201
+        - nvme-201
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-3nt-pq2
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: true
+  tags:
+    - performance
+    - performance-primary
+    - nvme
+    - nvme-202
+  disks:
+    default-disk-1030400000000:
+      path: /var/lib/longhorn/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 199711320473
+      tags:
+        - nvme
+        - node-202
+        - nvme-202
+    sdb-ssd:
+      path: /var/mnt/longhorn-sdb
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 53687091200
+      tags:
+        - ssd
+        - node-202
+        - sdb
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-w45-5vh
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: true
+  tags:
+    - capacity
+    - backup
+    - hdd
+    - media
+  disks:
+    default-disk-087400000000:
+      path: /var/lib/longhorn/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 24762817740
+      tags:
+        - ssd
+        - node-203
+    capacity-sdf:
+      path: /var/mnt/longhorn-capacity-sdf
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 107374182400
+      tags:
+        - hdd
+        - capacity
+        - media
+        - backup
+    capacity-sdg:
+      path: /var/mnt/longhorn-capacity-sdg
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 107374182400
+      tags:
+        - hdd
+        - capacity
+        - media
+        - backup

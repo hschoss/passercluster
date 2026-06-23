@@ -35,7 +35,7 @@ spec:
           namespace: envoy-gateway-system
           sectionName: https
       hostnames:
-        - podinfo.passer.home.arpa
+        - podinfo.passer.lan
       rules:
         - matches:
             - path:

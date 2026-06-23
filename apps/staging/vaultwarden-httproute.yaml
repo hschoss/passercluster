@@ -5,4 +5,4 @@ metadata:
   namespace: vaultwarden
 spec:
   hostnames:
-    - vaultwarden-staging.passer.home.arpa
+    - vaultwarden-staging.passer.lan
