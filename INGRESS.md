@@ -1,26 +1,32 @@
-What you want to achieve
+# Passer LAN Routing
 
-You want something like:
+Private services are exposed as `service.passer.lan` names.
 
-api.example.com → service A
-app.example.com → service B
-grafana.example.com → monitoring service
+Current model:
 
-This is done using Ingress resources.
+- Pi-hole on `passer` handles LAN DNS.
+- Envoy Gateway in Kubernetes is the reverse proxy.
+- Services are published with Gateway API `HTTPRoute` resources.
+- ExternalDNS and CoreDNS keep the cluster records in sync.
 
+Example names:
 
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+- `api.passer.lan` -> service A
+- `app.passer.lan` -> service B
+- `grafana.passer.lan` -> monitoring service
 
-helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+Flow:
 
-i want to use nginx, because it is the most popular
+```text
+LAN client
+  -> Pi-hole DNS
+  -> Envoy Gateway / Kubernetes
+  -> application service
+```
 
+Implementation notes:
 
-Internet
-   ↓
-[ Reverse Proxy / Ingress Controller ]
-   ↓        ↓        ↓
- app      api     grafana
-service   service   service
+- Use `HTTPRoute` for service exposure.
+- Keep the wildcard gateway hostname at `*.passer.lan`.
+- Keep app URL settings aligned with the public hostname.
+- Use Pi-hole local records or forwarding rules only for DNS, not ingress.

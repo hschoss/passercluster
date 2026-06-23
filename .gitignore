@@ -6,3 +6,14 @@ talos/*.yaml
 talos/talosconfig
 talos/*kubeconfig*
 !talos/*-template.yaml
+# Local docs and prompt notes
+NEW-PROMPT.md
+
+# Local agent metadata
+.claude/
+talos/.claude/
+
+# Talos recovery artifacts
+talos/recovered-talosconfig*/
+talos/talosconfig.expired-*
+talos/talosconfig.new
