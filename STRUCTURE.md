@@ -1,77 +1,90 @@
-## Step 1: i prepared my infrastructure
-To create your production cluster infrastructure:
+# Repository Structure
 
-    Boot your machines using the Talos ISO image
-    Ensure network access on your nodes.
+This repository is organized around GitOps, cluster infrastructure, application overlays, and Talos node assets.
 
-Here is how to do each step:
+## Top Level
 
-
-## Step 2: storing my IP addresses in variables
-CONTROL_PLANE_IP=("192.168.178.200") 
-WORKER_IP=("192.168.178.201" "192.168.178.202" "192.168.178.203")
-
-## Step 3: Decide your Kubernetes endpoint
-
-Dedicated load balancer: Set a dedicated load balancer that routes to your control plane nodes.
-DNS records: Create multiple DNS records that point to all your control plane nodes
-
-i set up my DNS records in my fritzbox
-
-Internet
-   |
-[Load Balancer]
-   |
--------------------
-|   |   |   |   |
-Pods Pods Pods Pods
-
-
-## Step 4: saving my endpoint in a variable
-export YOUR_ENDPOINT=192.168.178.200
-
-## Step 5: generating secrets bundle
-```
-talosctl gen secrets -o secrets.yaml
-```
-watch out to add it to my .gitignore 
-
-
-## Step 6: generating machine configuration
-```
-export CLUSTER_NAME=passercluster
-talosctl gen config --with-secrets secrets.yaml --talos-version v1.13 $CLUSTER_NAME https://$YOUR_ENDPOINT:6443
+```text
+passercluster/
+├── apps/
+├── clusters/
+├── docs/
+├── infrastructure/
+├── scripts/
+├── talos/
+├── talosconfig
+├── CLUSTER-SETUP.md
+├── COMMANDS.md
+├── CURRENT-STATE.md
+├── INGRESS.md
+├── README.md
+└── STRUCTURE.md
 ```
 
-## Step 7: Unmounting the ISO
+## Directory Roles
 
+### `apps/`
 
-## Step 8:
-talosctl --nodes 192.168.178.200 get links --insecure
-talosctl get disks --insecure --nodes 192.168.178.200
+Application manifests split into shared base definitions and environment-specific overlays.
 
+- `apps/base/` contains namespaces, Helm repositories, HelmReleases, HTTPRoutes, PVCs, and secrets used by both environments.
+- `apps/production/` contains production patches for release values and routes.
+- `apps/staging/` contains staging-specific values and routes.
 
-## Step 9: Patching
-touch controlplane-patch-1.yaml # For patching the control plane nodes configuration
-touch worker-patch-1.yaml # For patching the worker nodes configuration
+The app set currently includes:
 
+- Immich
+- Jellyfin
+- Nextcloud
+- Paperless-ngx
+- Podinfo
+- Vaultwarden
 
+### `clusters/`
 
+Flux bootstrap and cluster entrypoints.
 
-## Longhorn Setup
+- `clusters/production/` defines the production Flux `Kustomization` objects and source composition.
+- `clusters/staging/` mirrors the production layout for the staging environment.
 
-192.168.178.203   runtime     Disk   sdf     6         4.0 TB   naa.5000c500c4c3387c   ST4000LM024-2AN1    jellyfin
-192.168.178.203   runtime     Disk   sdg     4         4.0 TB   naa.5000c500c4c34fa3   ST4000LM024-2AN1
-192.168.178.203   runtime     Disk   sdh     2         250 GB   naa.5002538e4976b40b   Samsung SSD 860     talos 
-192.168.178.203   runtime     Disk   sdi     5         500 GB   naa.50014ee25e4d0f4a   WDC WD5000AAKX-6    velero cluster backup pod
+### `infrastructure/`
 
-192.168.178.202   runtime     Disk   nvme0n1   2         2.0 TB   nvme.c0a9-323333384538373843454343        2338E878CECC        nextcloud
-192.168.178.202   runtime     Disk   sdb       6         1.0 TB   naa.5002538e097270d5                      Samsung SSD 860     talos 
+Cluster-wide controllers and resources.
 
+- `infrastructure/controllers/` installs the core control plane add-ons such as cert-manager, Envoy Gateway, ExternalDNS, Longhorn, CloudNativePG, CoreDNS, and MetalLB.
+- `infrastructure/configs/` defines the cluster resources those controllers need, including Gateway API objects, issuers, storage classes, and Longhorn placement.
+- `infrastructure/velero/` and `infrastructure/velero-schedules/` hold the backup stack resources.
 
-192.168.178.201   runtime     Disk   nvme0n1   2         1.0 TB   eui.0026b7683f8280c5  KINGSTON SA2000M81000G 50026B7683F8280C  immich + talos
+### `talos/`
 
-192.168.178.200   runtime     Disk   nvme0n1   2         256 GB   eui.000000000000000100a07519245c4abd   MTFDHBA256TCK-1AS1AABHA talos
+Talos machine configuration, patches, and recovery artifacts.
 
-# hannes at schlaeptop in ~/passercluster/talos
->
+- `talos/old-yaml/` contains previous machine configs.
+- `talos/old-patches/` contains older patch fragments.
+- `talos/patches/` contains the current Longhorn-related patches per node.
+- `talos/recovered-talosconfig*/` contains recovery copies of Talos config.
+- `talos/talosconfig*` contains local Talos client config snapshots and expired backups.
+
+### `scripts/`
+
+Operational helpers for storage validation, restore workflows, and health checks.
+
+### `docs/`
+
+Supplementary documentation that is not part of the main bootstrap path.
+
+## Canonical GitOps Flow
+
+1. `infrastructure/controllers/production/kustomization.yaml`
+2. `infrastructure/configs/production/kustomization.yaml`
+3. `apps/production/kustomization.yaml`
+
+That order matters because apps depend on the controllers and cluster resources above them.
+
+## Related Documentation
+
+- [Repository map](docs/REPOSITORY_MAP.md)
+- [Operations guide](docs/OPERATIONS.md)
+- [Service map](docs/SERVICES.md)
+- [Ingress and DNS](INGRESS.md)
+- [Current state](CURRENT-STATE.md)

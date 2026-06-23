@@ -1,73 +1,57 @@
-# Homelab DNS and TLS Setup
+# Passer LAN DNS and TLS Setup
 
-This cluster uses `.homelab` names for private services only. FritzBox remains the primary DNS resolver for clients, and only the `.homelab` zone is conditionally forwarded to the in-cluster CoreDNS LoadBalancer.
+This cluster uses `passer.lan` for private service names. Pi-hole on `passer` is the LAN DNS entrypoint, and Envoy Gateway in Kubernetes is the actual reverse proxy for HTTP and HTTPS traffic.
 
 ## DNS Flow
 
-- Primary client DNS: FritzBox.
-- Conditional forwarding zone: `homelab`.
-- Conditional forwarding target: `192.168.178.241`, the `homelab-coredns` LoadBalancer from `infrastructure/controllers/coredns.yaml`.
-- Dynamic records: ExternalDNS watches Gateway API `HTTPRoute` objects and writes `.homelab` records to the CoreDNS etcd backend.
-- Failure behavior: if the cluster or CoreDNS is unavailable, `.homelab` lookups fail, but normal internet DNS continues through FritzBox.
+- Clients query Pi-hole on `passer`.
+- Pi-hole resolves or forwards `passer.lan` names to the cluster DNS path.
+- Envoy Gateway listens on `192.168.178.240`.
+- CoreDNS listens on `192.168.178.241` and serves cluster-local DNS records published by ExternalDNS.
+- ExternalDNS watches Gateway API `HTTPRoute` objects and writes `passer.lan` records into the CoreDNS etcd backend.
 
-## FritzBox Conditional Forwarding
+## Pi-hole Rules
 
-1. Open the FritzBox web UI.
-2. Go to `Home Network` -> `Network` -> `Network Settings`.
-3. Find the DNS or local DNS server settings for conditional forwarding.
-4. Add a conditional forwarding entry:
-   - Domain: `homelab`
-   - DNS server: `192.168.178.241`
-5. Save the configuration.
-6. From a client on the LAN or VPN, test a service name:
+1. Open the Pi-hole admin UI.
+2. Add the `passer.lan` records or forwarding rule you need.
+3. Keep the gateway address pointed at `192.168.178.240`.
+4. Keep cluster-local DNS pointing at `192.168.178.241` if you want dynamic records from ExternalDNS.
+5. Test resolution from a LAN client:
 
 ```bash
-nslookup nextcloud.homelab
-nslookup immich.homelab
+nslookup nextcloud.passer.lan
+nslookup immich.passer.lan
 ```
 
 ## TLS Trust
 
-cert-manager creates an internal CA with `selfsigned-bootstrap`, then uses `selfsigned-issuer` for `.homelab` certificates. The Envoy Gateway HTTPS listener uses the `wildcard-homelab-tls` certificate.
+cert-manager creates an internal CA with `selfsigned-bootstrap`, then uses `selfsigned-issuer` for `passer.lan` certificates. The Envoy Gateway HTTPS listener uses the wildcard certificate for `passer.lan`.
 
-To install the homelab CA on a client:
+To install the internal CA on a client:
 
 ```bash
 kubectl get secret -n cert-manager homelab-root-ca -o jsonpath='{.data.tls\.crt}' | base64 -d > homelab-root-ca.crt
 ```
 
-Install `homelab-root-ca.crt` into the operating system or browser trust store. Without this step, browsers will show a certificate warning, which is expected for a private CA.
-
-## VPN Access
-
-VPN clients should use FritzBox as their DNS server so the same conditional forwarding rule applies remotely. After connecting to the VPN, verify:
-
-```bash
-nslookup vaultwarden.homelab
-curl -I https://vaultwarden.homelab
-```
-
-If VPN clients use a different DNS server, add a VPN DNS rule that forwards `homelab` to FritzBox or directly to `192.168.178.241`.
+Install `homelab-root-ca.crt` into the operating system or browser trust store if you want browsers to trust the private certificates.
 
 ## Service URLs
 
-- Nextcloud: `https://nextcloud.homelab`
-- Immich: `https://immich.homelab`
-- Jellyfin: `https://jellyfin.homelab`
-- Vaultwarden: `https://vaultwarden.homelab`
-- Podinfo: `https://podinfo.homelab`
-- Longhorn: `https://longhorn.homelab`
+- Nextcloud: `https://nextcloud.passer.lan`
+- Immich: `https://immich.passer.lan`
+- Jellyfin: `https://jellyfin.passer.lan`
+- Vaultwarden: `https://vaultwarden.passer.lan`
+- Podinfo: `https://podinfo.passer.lan`
+- Longhorn: `https://longhorn.passer.lan`
 
 Staging services keep separate names where staging overlays exist:
 
-- Nextcloud staging: `https://nextcloud-staging.homelab`
-- Jellyfin staging: `https://jellyfin-staging.homelab`
-- Vaultwarden staging: `https://vaultwarden-staging.homelab`
-- Podinfo staging: `https://podinfo-staging.homelab`
+- Nextcloud staging: `https://nextcloud-staging.passer.lan`
+- Jellyfin staging: `https://jellyfin-staging.passer.lan`
+- Vaultwarden staging: `https://vaultwarden-staging.passer.lan`
+- Podinfo staging: `https://podinfo-staging.passer.lan`
 
 ## Operations
-
-Useful checks after Flux reconciles:
 
 ```bash
 kubectl get helmrelease -A
@@ -78,4 +62,20 @@ kubectl get certificate -A
 kubectl get httproute -A
 ```
 
-The CoreDNS LoadBalancer IP must stay outside the FritzBox DHCP pool. The current MetalLB pool is `192.168.178.240-192.168.178.250`, Envoy uses `192.168.178.240`, and CoreDNS reserves `192.168.178.241`.
+The CoreDNS LoadBalancer IP must stay outside the DHCP pool. The current MetalLB pool is `192.168.178.240-192.168.178.250`, Envoy uses `192.168.178.240`, and CoreDNS reserves `192.168.178.241`.
+
+## Adding A Domain
+
+1. Add or update the service's `HTTPRoute` hostname in the repo.
+2. Update any app-level URL setting such as `PAPERLESS_URL` or the Nextcloud host config.
+3. Make sure the hostname ends in `passer.lan`.
+4. Reconcile Flux.
+5. Verify the new name resolves through Pi-hole and returns the app.
+
+## Deleting A Domain
+
+1. Remove the hostname from the service's `HTTPRoute`.
+2. Remove any app-level URL or trusted-domain setting for that name.
+3. Remove any matching Pi-hole local DNS record if one exists.
+4. Reconcile Flux.
+5. Confirm the old name no longer resolves.

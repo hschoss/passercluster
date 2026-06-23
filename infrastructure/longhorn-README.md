@@ -48,7 +48,7 @@ The default S3 target is configured in the HelmRelease as `s3://longhorn-backups
 
 ## Operations
 
-- Dashboard: `https://longhorn.homelab` through `infrastructure/configs/longhorn-httproute.yaml`.
+- Dashboard: `https://longhorn.lan` through `infrastructure/configs/longhorn-httproute.yaml`.
 - Health check: run `scripts/longhorn-health-check.sh`.
 - Restore: prefer the Longhorn UI for production restores; `scripts/longhorn-restore-from-backup.sh` is a starting point and must be tested with a non-critical backup first.
 
