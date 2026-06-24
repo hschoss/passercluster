@@ -7,6 +7,7 @@ This repository currently exposes private services through `https://<service>.pa
 | Service | Namespace | URL | Notes |
 | --- | --- | --- | --- |
 | Immich | `immich` | `https://immich.passer.lan` | Route targets `immich-server:2283`. |
+| Authentik | `authentik` | `https://auth.passer.lan` | Primary login gateway; initial setup is over HTTP before daily HTTPS use. |
 | Jellyfin | `jellyfin` | `https://jellyfin.passer.lan` | Media service. |
 | Nextcloud | `nextcloud` | `https://nextcloud.passer.lan` | Host URL must match the app config. |
 | Paperless-ngx | `paperless-ngx` | `https://paperless.passer.lan` | URL is set in the app values. |

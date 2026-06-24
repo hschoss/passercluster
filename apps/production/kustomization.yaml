@@ -7,6 +7,7 @@ resources:
   - ../base/vaultwarden
   - ../base/immich
   - ../base/paperless-ngx
+  - ../base/authentik
 patches:
   - path: podinfo-values.yaml
     target:
@@ -48,3 +49,7 @@ patches:
     target:
       kind: HelmRelease
       name: paperless-ngx
+  - path: authentik-values.yaml
+    target:
+      kind: HelmRelease
+      name: authentik
