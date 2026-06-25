@@ -7,7 +7,7 @@ spec:
   instances: 1
   storage:
     size: 5Gi
-    storageClass: longhorn-nvme-202
+    storageClass: longhorn-immich-fast
   bootstrap:
     initdb:
       database: authentik
