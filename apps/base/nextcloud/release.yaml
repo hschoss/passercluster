@@ -44,6 +44,20 @@ spec:
       enabled: true
       storageClass: longhorn-nextcloud-fast
       size: 8Gi
+    internalDatabase:
+      enabled: false
+      name: nextcloud
+    externalDatabase:
+      enabled: true
+      type: mysql
+      host: nextcloud-mariadb.nextcloud.svc.cluster.local
+      database: nextcloud
+      user: nextcloud
+      existingSecret:
+        enabled: true
+        secretName: nextcloud-db
+        usernameKey: db-username
+        passwordKey: db-password
     mariadb:
       enabled: true
       auth:
