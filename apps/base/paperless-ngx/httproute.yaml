@@ -3,8 +3,6 @@ kind: HTTPRoute
 metadata:
   name: paperless-ngx
   namespace: paperless-ngx
-  annotations:
-    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
   hostnames:
     - paperless.passer.lan

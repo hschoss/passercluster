@@ -1,6 +1,7 @@
 # Operations Guide
 
-This repository is managed through Flux. The practical rule is simple: edit Git, then reconcile the affected Flux layer, then verify the live objects.
+This repository is managed through Flux. The practical rule is simple: edit Git,
+then reconcile the affected Flux layer, then verify the live objects.
 
 ## Reconcile Order
 
@@ -29,7 +30,7 @@ After a reconcile, confirm the following:
 ```bash
 kubectl get gateway -A
 kubectl get httproute -A
-kubectl get certificate -A
+kubectl get secret passer-lan-tls -A
 kubectl get svc -A | grep LoadBalancer
 kubectl get pods -A
 ```
@@ -39,7 +40,7 @@ Expected signals for a healthy cluster:
 - Flux kustomizations report `Ready`
 - the Envoy Gateway has the expected LoadBalancer IP
 - HTTPRoutes are attached to the gateway
-- the wildcard certificate secret exists for `passer.lan`
+- the `passer-lan-tls` secret exists in `envoy-gateway-system`
 - application namespaces have running pods
 
 ## Network Model
@@ -58,8 +59,9 @@ The canonical service domain is `passer.lan`.
 ## DNS And TLS
 
 - `ExternalDNS` watches `gateway-httproute` sources and writes `passer.lan` records into CoreDNS.
-- `cert-manager` issues the internal wildcard certificate used by Envoy.
-- Browsers that do not trust the internal CA will show the normal self-signed warning until the CA is installed on the client.
+- `scripts/generate-passer-lan-cert.sh` creates the self-signed certificate locally.
+- `scripts/apply-passer-lan-tls-secret.sh` rolls the `passer-lan-tls` Secret into the namespaces that need it.
+- Browsers that do not trust the certificate will show the normal self-signed warning.
 
 ## Storage Model
 

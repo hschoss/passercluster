@@ -30,14 +30,15 @@ Where staging overlays exist, the names are separate:
 
 - Envoy Gateway listens on `192.168.178.240`.
 - CoreDNS listens on `192.168.178.241`.
-- The internal wildcard certificate is issued from `selfsigned-issuer`.
-- Clients must trust the homelab root CA if they want a clean HTTPS experience.
+- The HTTPS listener uses the locally generated `passer-lan-tls` Secret.
+- Browsers will warn unless you manually trust the self-signed certificate.
+- If local DNS returns `NXDOMAIN`, query CoreDNS directly or fix the Pi-hole forwarding path first.
 
 ## Quick Checks
 
 ```bash
 nslookup immich.passer.lan
-nslookup nextcloud.passer.lan
+nslookup immich.passer.lan 192.168.178.241
 curl -I https://immich.passer.lan
 curl -I https://nextcloud.passer.lan
 ```
