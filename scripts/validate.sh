@@ -147,11 +147,17 @@ is_non_kustomize_excluded_dir() {
   return 1
 }
 
-# Detect directories containing Terraform files, Helm charts, or kustomize overlays
+# Detect directories containing Terraform files, Helm charts, Talos config, or kustomize overlays
 detect_excluded_dirs() {
   while IFS= read -r -d $'\0' file; do
     auto_skip_dirs+=("$(dirname "$file")")
   done < <(find "$root_dir" -path '*/.*' -prune -o -type f \( -name '*.tf' -o -name 'Chart.yaml' \) -print0)
+
+  if [[ -d "$root_dir/talos" ]]; then
+    while IFS= read -r -d $'\0' file; do
+      auto_skip_dirs+=("$(dirname "$file")")
+    done < <(find "$root_dir/talos" -path '*/.*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
+  fi
 
   while IFS= read -r -d $'\0' file; do
     kustomize_dirs+=("$(dirname "$file")")
