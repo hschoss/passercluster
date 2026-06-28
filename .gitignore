@@ -17,3 +17,6 @@ talos/.claude/
 talos/recovered-talosconfig*/
 talos/talosconfig.expired-*
 talos/talosconfig.new
+
+# Locally generated TLS material
+secrets/

@@ -2,6 +2,8 @@
 
 This cluster uses `passer.lan` for private service names. Pi-hole on `passer` is the LAN DNS entrypoint, and Envoy Gateway in Kubernetes is the actual reverse proxy for HTTP and HTTPS traffic.
 
+For the current HTTPS lifecycle, see [Homelab HTTPS](homelab-https.md).
+
 ## DNS Flow
 
 - Clients query Pi-hole on `passer`.
@@ -25,15 +27,9 @@ nslookup immich.passer.lan
 
 ## TLS Trust
 
-cert-manager creates an internal CA with `selfsigned-bootstrap`, then uses `selfsigned-issuer` for `passer.lan` certificates. The Envoy Gateway HTTPS listener uses the wildcard certificate for `passer.lan`.
-
-To install the internal CA on a client:
-
-```bash
-kubectl get secret -n cert-manager homelab-root-ca -o jsonpath='{.data.tls\.crt}' | base64 -d > homelab-root-ca.crt
-```
-
-Install `homelab-root-ca.crt` into the operating system or browser trust store if you want browsers to trust the private certificates.
+The cluster uses a self-signed certificate for `passer.lan` and `*.passer.lan`.
+Browsers will warn because the certificate is not signed by a public CA.
+That warning is expected for this LAN-only setup.
 
 ## Service URLs
 
@@ -57,8 +53,6 @@ Staging services keep separate names where staging overlays exist:
 kubectl get helmrelease -A
 kubectl get svc -n homelab-dns homelab-coredns
 kubectl get pods -n external-dns
-kubectl get clusterissuer
-kubectl get certificate -A
 kubectl get httproute -A
 ```
 

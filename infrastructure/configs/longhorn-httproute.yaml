@@ -3,8 +3,6 @@ kind: HTTPRoute
 metadata:
   name: longhorn
   namespace: longhorn-system
-  annotations:
-    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
   parentRefs:
     - name: envoy

@@ -31,8 +31,6 @@ kind: Gateway
 metadata:
   name: envoy
   namespace: envoy-gateway-system
-  annotations:
-    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
   gatewayClassName: envoy
   listeners:
@@ -45,12 +43,11 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.passer.lan"
       tls:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: wildcard-passer.lan-tls
+            name: passer-lan-tls
       allowedRoutes:
         namespaces:
           from: All
