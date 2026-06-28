@@ -20,6 +20,18 @@ Then open:
 http://127.0.0.1:9000
 ```
 
+If you want the repo to reconcile the Authentik release first and wait for it to become ready, use the helper script:
+
+```bash
+./scripts/authentik-bootstrap.sh
+```
+
+To reconcile and start the port-forward in one step:
+
+```bash
+./scripts/authentik-bootstrap.sh --port-forward
+```
+
 ## Daily access
 
 After bootstrap, the normal URL is:
