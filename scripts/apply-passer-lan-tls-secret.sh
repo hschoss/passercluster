@@ -29,7 +29,7 @@ discover_namespaces() {
   local file namespace
 
   while IFS= read -r -d '' file; do
-    namespace="$(yq e '.metadata.name // ""' "$file")"
+    namespace="$(yq -r '.metadata.name // empty' "$file")"
     if [[ -n "$namespace" ]]; then
       namespaces+=("$namespace")
     fi
@@ -38,7 +38,7 @@ discover_namespaces() {
   while IFS= read -r -d '' file; do
     while IFS= read -r namespace; do
       [[ -n "$namespace" ]] && namespaces+=("$namespace")
-    done < <(yq e 'select(.kind == "Ingress" or .kind == "HTTPRoute") | .metadata.namespace // ""' "$file")
+    done < <(yq -r 'select(.kind == "Ingress" or .kind == "HTTPRoute") | .metadata.namespace // empty' "$file")
   done < <(find "$repo_root/apps" "$repo_root/infrastructure" "$repo_root/clusters" -path '*/.*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
 
   namespaces+=("envoy-gateway-system")
