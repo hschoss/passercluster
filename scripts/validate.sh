@@ -20,8 +20,8 @@ set -o pipefail
 kustomize_flags=("--load-restrictor=LoadRestrictionsNone")
 kustomize_config="kustomization.yaml"
 
-# skip Kubernetes Secrets due to SOPS fields failing validation
-kubeconform_flags=("-skip=Secret")
+# skip Kubernetes Secrets and StorageClasses due to SOPS fields and missing upstream schema coverage
+kubeconform_flags=("-skip=Secret,StorageClass")
 kubeconform_config=("-strict" "-ignore-missing-schemas" "-schema-location" "default" "-schema-location" "/tmp/flux-crd-schemas" "-verbose")
 
 # root directory to validate
