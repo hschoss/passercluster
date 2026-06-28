@@ -35,6 +35,7 @@ jobs:
             --path=./clusters/e2e
       - name: Verify cluster reconciliation
         run: |
+          kubectl -n flux-system wait kustomization/flux-system --for=condition=ready --timeout=10m
           kubectl -n flux-system wait kustomization/infra-controllers --for=condition=ready --timeout=10m
       - name: Seed gateway TLS for e2e
         run: |
