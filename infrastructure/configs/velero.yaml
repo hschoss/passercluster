@@ -8,93 +8,16 @@ metadata:
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
 ---
-# MinIO — lightweight S3-compatible backup store backed by longhorn-backup (sdh on .203)
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: minio-data
-  namespace: velero
-spec:
-  storageClassName: longhorn-backup
-  accessModes: [ReadWriteOnce]
-  resources:
-    requests:
-      storage: 3500Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: minio
-  namespace: velero
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: minio
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: minio
-    spec:
-      nodeSelector:
-        kubernetes.io/hostname: talos-w45-5vh
-      containers:
-        - name: minio
-          image: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
-          args: [server, /data, --console-address, ":9001"]
-          envFrom:
-            - secretRef:
-                name: minio-credentials
-          ports:
-            - name: api
-              containerPort: 9000
-            - name: console
-              containerPort: 9001
-          volumeMounts:
-            - name: data
-              mountPath: /data
-          livenessProbe:
-            httpGet:
-              path: /minio/health/live
-              port: 9000
-            initialDelaySeconds: 30
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /minio/health/ready
-              port: 9000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: minio-data
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: minio
-  namespace: velero
-spec:
-  selector:
-    app: minio
-  ports:
-    - name: api
-      port: 9000
-      targetPort: 9000
-    - name: console
-      port: 9001
-      targetPort: 9001
----
-# One-shot job to create the velero bucket in MinIO on first boot
+# One-shot job to create the Velero bucket on the Raspberry Pi MinIO endpoint.
+# The Pi must already run MinIO on the LAN IP below and expose the S3 API on port 9000.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: minio-bucket-setup
+  name: velero-bucket-setup
   namespace: velero
 spec:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 86400
   template:
     spec:
       restartPolicy: OnFailure
@@ -104,7 +27,7 @@ spec:
           command:
             - sh
             - -c
-            - until wget -qO- http://minio.velero.svc.cluster.local:9000/minio/health/ready; do sleep 5; done
+            - until wget -qO- http://192.168.178.2:9000/minio/health/ready; do sleep 5; done
       containers:
         - name: mc
           image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
@@ -112,9 +35,9 @@ spec:
             - sh
             - -c
             - |
-              mc alias set local http://minio.velero.svc.cluster.local:9000 \
+              mc alias set passer http://192.168.178.2:9000 \
                 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-              mc mb --ignore-existing local/velero
+              mc mb --ignore-existing passer/velero
           envFrom:
             - secretRef:
                 name: minio-credentials
@@ -163,6 +86,8 @@ spec:
           - mountPath: /target
             name: plugins
     configuration:
+      uploaderType: kopia
+      defaultVolumesToFsBackup: true
       backupStorageLocation:
         - name: default
           provider: aws
@@ -171,8 +96,8 @@ spec:
           config:
             region: minio
             s3ForcePathStyle: "true"
-            s3Url: http://minio.velero.svc.cluster.local:9000
-            publicUrl: http://minio.velero.svc.cluster.local:9000
+            s3Url: http://192.168.178.2:9000
+            publicUrl: http://192.168.178.2:9000
     credentials:
       useSecret: true
       existingSecret: velero-credentials

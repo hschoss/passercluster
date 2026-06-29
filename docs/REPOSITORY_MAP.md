@@ -47,12 +47,17 @@ Production overlays patch the base app manifests with production-specific values
 
 Staging overlays mirror the production layout where staging variants exist.
 
+### `apps/e2e/`
+
+Lightweight CI-only overlay used by the GitHub Actions Flux smoke test. It keeps the test path focused on a single routable app instead of the full staging workload set.
+
 ## `clusters/`
 
-Cluster-level Flux entrypoints.
+Cluster-level Flux entry points.
 
 - `clusters/production/` contains the production `Kustomization` objects that pull from `infrastructure/` and `apps/`.
 - `clusters/staging/` contains the staging equivalent.
+- `clusters/e2e/` contains the lightweight CI reconciliation path.
 - `flux-system/` under each cluster holds the Flux bootstrap resources.
 
 ## `infrastructure/`
@@ -90,11 +95,11 @@ Cluster resources that depend on the controllers being present.
 
 ### `infrastructure/velero/`
 
-Velero backup resources.
+Velero backup resources. The current backup stack points to the external MinIO endpoint on `passer` (`192.168.178.2`) instead of running a bucket store inside the cluster.
 
 ### `infrastructure/velero-schedules/`
 
-Velero schedule resources that are deployed after the core backup stack.
+Velero schedule resources that are deployed after the core backup stack. The daily schedule backs up the stateful application namespaces and intentionally excludes Jellyfin media.
 
 ## `scripts/`
 
@@ -121,6 +126,7 @@ Talos-specific configuration, node patches, and recovery artifacts.
 Supplementary documentation.
 
 - [`HOMELAB_SETUP.md`](HOMELAB_SETUP.md) - setup notes for the homelab stack
+- [`velero-backups.md`](velero-backups.md) - Velero backup and restore guide
 - [`infrastructure/longhorn-README.md`](../infrastructure/longhorn-README.md) - Longhorn-specific storage notes
 
 ## Local-Only Artifacts
