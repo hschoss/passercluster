@@ -18,6 +18,7 @@ The e2e overlay keeps the smoke test focused on one fast, routable app.
 ## Still To Verify
 
 - The workflow now waits for `flux-system`, the generated `externalartifact/*` resources to exist, and then `infra-controllers`, `infra-configs`, and `apps` to become `Ready` before verifying `podinfo` separately.
+- The e2e overlay now has a real `clusters/e2e/kustomization.yaml` entrypoint so Flux can render the CI resources deterministically.
 - The E2E run needs a temporary TLS secret in `envoy-gateway-system` so Envoy Gateway can serve HTTPS in Kind.
 - The CI-only `apps` Kustomization intentionally does not wait on workload health; the HelmRelease check covers that explicitly.
 - The `podinfo-e2e.passer.lan` route should be attached before the curl check runs.

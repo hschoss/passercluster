@@ -35,13 +35,25 @@ jobs:
             --path=./clusters/e2e
       - name: Verify cluster reconciliation
         run: |
+          set -euo pipefail
           kubectl -n flux-system wait kustomization/flux-system --for=condition=ready --timeout=10m
-          until kubectl -n flux-system get externalartifact/infrastructure >/dev/null 2>&1; do sleep 5; done
-          kubectl -n flux-system wait externalartifact/infrastructure --for=condition=ready --timeout=10m
-          until kubectl -n flux-system get externalartifact/apps >/dev/null 2>&1; do sleep 5; done
-          kubectl -n flux-system wait externalartifact/apps --for=condition=ready --timeout=10m
-          until kubectl -n flux-system get kustomization/infra-controllers >/dev/null 2>&1; do sleep 5; done
-          kubectl -n flux-system wait kustomization/infra-controllers --for=condition=ready --timeout=10m
+          echo "Flux Kustomizations in flux-system:"
+          kubectl -n flux-system get kustomizations
+          for name in infra-controllers infra-configs apps; do
+            echo "Waiting for Flux Kustomization resource: ${name}"
+            for _ in $(seq 1 120); do
+              if kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
+                break
+              fi
+              sleep 5
+            done
+            if ! kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
+              echo "Expected Flux Kustomization ${name} was not created"
+              kubectl -n flux-system get kustomizations || true
+              exit 1
+            fi
+            kubectl -n flux-system wait "kustomization/${name}" --for=condition=ready --timeout=10m
+          done
       - name: Seed gateway TLS for e2e
         run: |
           set -euo pipefail
@@ -76,7 +88,21 @@ jobs:
           kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=10m
       - name: Verify helm reconciliation
         run: |
-          kubectl -n podinfo wait helmrelease/podinfo --for=condition=ready --timeout=10m
+          set -euo pipefail
+          echo "HelmReleases in the cluster:"
+          kubectl get helmreleases -A
+          helmreleases="$(kubectl get helmreleases -A -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}')"
+          if [ -z "${helmreleases}" ]; then
+            echo "No HelmReleases found"
+            exit 1
+          fi
+          while IFS= read -r namespace name; do
+            [ -z "${namespace:-}" ] && continue
+            echo "Waiting for HelmRelease: ${namespace}/${name}"
+            kubectl -n "${namespace}" wait "helmrelease/${name}" --for=condition=ready --timeout=10m
+          done <<EOF
+          ${helmreleases}
+          EOF
       - name: Verify gateway routing
         run: |
           kubectl -n envoy-gateway-system port-forward \
@@ -88,8 +114,14 @@ jobs:
       - name: Debug failure
         if: failure()
         run: |
-          kubectl -n flux-system get all
-          kubectl -n flux-system logs deploy/source-controller
-          kubectl -n flux-system logs deploy/kustomize-controller
-          kubectl -n flux-system logs deploy/helm-controller
+          set +e
+          kubectl get ns
+          kubectl get pods -A
+          kubectl -n flux-system get sources,kustomizations,helmreleases
+          kubectl -n flux-system describe kustomizations
+          for deploy in source-controller kustomize-controller helm-controller; do
+            if kubectl -n flux-system get deploy "${deploy}" >/dev/null 2>&1; then
+              kubectl -n flux-system logs deploy/"${deploy}" --tail=100
+            fi
+          done
           flux get all --all-namespaces
