@@ -11,6 +11,7 @@ Root-level Markdown files have been removed so the documentation lives in one pl
 - [Authentik](AUTHENTIK.md)
 - [Homelab setup](HOMELAB_SETUP.md)
 - [Homelab HTTPS](homelab-https.md)
+- [Velero backups](velero-backups.md)
 
 ## Runbooks
 

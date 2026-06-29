@@ -1,35 +1,19 @@
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
-  name: cluster-backup-10am
+  name: daily-critical-apps
   namespace: velero
 spec:
-  schedule: "0 10 * * *"
+  schedule: "0 3 * * *"
   template:
     includedNamespaces:
       - nextcloud
-      - jellyfin
       - immich
+      - paperless-ngx
       - vaultwarden
-    storageLocation: default
-    ttl: 168h
-    snapshotVolumes: false
-    defaultVolumesToFsBackup: true
----
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: cluster-backup-6pm
-  namespace: velero
-spec:
-  schedule: "0 18 * * *"
-  template:
-    includedNamespaces:
-      - nextcloud
+    excludedNamespaces:
       - jellyfin
-      - immich
-      - vaultwarden
     storageLocation: default
-    ttl: 168h
+    ttl: 336h
     snapshotVolumes: false
     defaultVolumesToFsBackup: true
