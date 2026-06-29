@@ -93,10 +93,18 @@ jobs:
             exit 1
           fi
           for entry in "${helmreleases[@]}"; do
+            if [[ "$entry" != *"|"* ]]; then
+              echo "Invalid HelmRelease entry without delimiter: '$entry'"
+              exit 1
+            fi
             namespace="${entry%%|*}"
             name="${entry#*|}"
-            if [ -z "$namespace" ] || [ -z "$name" ] || [ "$namespace" = "$name" ]; then
-              echo "Invalid HelmRelease entry: '$entry'"
+            if [ -z "$namespace" ] || [ -z "$name" ]; then
+              echo "Invalid HelmRelease entry with empty namespace or name: '$entry'"
+              exit 1
+            fi
+            if [[ "$namespace" == *"|"* ]] || [[ "$name" == *"|"* ]]; then
+              echo "Invalid HelmRelease entry with too many delimiters: '$entry'"
               exit 1
             fi
             echo "namespace='${namespace}' name='${name}'"
