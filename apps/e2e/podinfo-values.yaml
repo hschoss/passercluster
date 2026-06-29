@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: podinfo
+spec:
+  values:
+    httpRoute:
+      hostnames:
+        - podinfo-e2e.passer.lan
