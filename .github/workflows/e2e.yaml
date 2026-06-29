@@ -22,38 +22,6 @@ jobs:
           node_image: kindest/node:v1.33.4
       - name: Install Flux in Kubernetes Kind
         run: flux install --components-extra source-watcher
-      - name: Setup cluster reconciliation
-        run: |
-          flux create source git flux-system \
-            --url=${{ github.event.repository.html_url }} \
-            --branch=${GITHUB_REF#refs/heads/} \
-            --username=${GITHUB_ACTOR} \
-            --password=${{ secrets.GITHUB_TOKEN }} \
-            --ignore-paths="clusters/**/flux-system/"
-          flux create kustomization flux-system \
-            --source=flux-system \
-            --path=./clusters/e2e
-      - name: Verify cluster reconciliation
-        run: |
-          set -euo pipefail
-          kubectl -n flux-system wait kustomization/flux-system --for=condition=ready --timeout=10m
-          echo "Flux Kustomizations in flux-system:"
-          kubectl -n flux-system get kustomizations
-          for name in infra-controllers infra-configs apps; do
-            echo "Waiting for Flux Kustomization resource: ${name}"
-            for _ in $(seq 1 120); do
-              if kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
-                break
-              fi
-              sleep 5
-            done
-            if ! kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
-              echo "Expected Flux Kustomization ${name} was not created"
-              kubectl -n flux-system get kustomizations || true
-              exit 1
-            fi
-            kubectl -n flux-system wait "kustomization/${name}" --for=condition=ready --timeout=10m
-          done
       - name: Seed gateway TLS for e2e
         run: |
           set -euo pipefail
@@ -80,12 +48,31 @@ jobs:
           openssl req -x509 -nodes -newkey rsa:4096 -days 3650             -keyout "$tmpdir/passer-lan.key"             -out "$tmpdir/passer-lan.crt"             -config "$tmpdir/openssl.cnf"             -extensions v3_req
           kubectl create namespace envoy-gateway-system --dry-run=client -o yaml | kubectl apply -f -
           kubectl create secret tls passer-lan-tls             --cert="$tmpdir/passer-lan.crt"             --key="$tmpdir/passer-lan.key"             -n envoy-gateway-system             --dry-run=client -o yaml | kubectl apply -f -
+      - name: Setup cluster reconciliation
+        run: |
+          set -euo pipefail
+          flux create source git flux-system             --url=${{ github.event.repository.html_url }}             --branch=${{ github.ref_name }}             --username=${GITHUB_ACTOR}             --password=${{ secrets.GITHUB_TOKEN }}             --ignore-paths="clusters/**/flux-system/"             --interval=1m
+          flux create kustomization flux-system             --source=flux-system             --path=./clusters/e2e             --prune=true             --interval=1m             --timeout=10m             --wait=false
       - name: Verify cluster reconciliation
         run: |
-          until kubectl -n flux-system get kustomization/infra-configs >/dev/null 2>&1; do sleep 5; done
-          kubectl -n flux-system wait kustomization/infra-configs --for=condition=ready --timeout=10m
-          until kubectl -n flux-system get kustomization/apps >/dev/null 2>&1; do sleep 5; done
-          kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=10m
+          set -euo pipefail
+          kubectl -n flux-system wait kustomization/flux-system --for=condition=ready --timeout=10m
+          kubectl -n flux-system get kustomizations -o wide
+          for name in infra-controllers infra-configs apps; do
+            echo "Waiting for Flux Kustomization resource: ${name}"
+            for _ in $(seq 1 120); do
+              if kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
+                break
+              fi
+              sleep 5
+            done
+            if ! kubectl -n flux-system get "kustomization/${name}" >/dev/null 2>&1; then
+              echo "Expected Flux Kustomization ${name} was not created"
+              kubectl -n flux-system get kustomizations -o wide || true
+              exit 1
+            fi
+            kubectl -n flux-system wait "kustomization/${name}" --for=condition=ready --timeout=10m
+          done
       - name: Verify helm reconciliation
         run: |
           set -euo pipefail
@@ -105,8 +92,15 @@ jobs:
           EOF
       - name: Verify gateway routing
         run: |
-          kubectl -n envoy-gateway-system port-forward \
-            $(kubectl -n envoy-gateway-system get svc -l gateway.envoyproxy.io/owning-gateway-name=envoy -o name) 8080:80 &
+          set -euo pipefail
+          kubectl -n envoy-gateway-system get svc -o wide
+          svc_name="$(kubectl -n envoy-gateway-system get svc -l gateway.envoyproxy.io/owning-gateway-name=envoy -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | sort | head -n1)"
+          if [ -z "${svc_name}" ]; then
+            echo "No Envoy Gateway service found"
+            kubectl -n envoy-gateway-system get svc -o wide
+            exit 1
+          fi
+          kubectl -n envoy-gateway-system port-forward "svc/${svc_name}" 8080:80 &
           sleep 5
           curl -sSf -H "Host: podinfo-e2e.passer.lan" http://localhost:8080
       - name: List deployed resources
@@ -117,8 +111,17 @@ jobs:
           set +e
           kubectl get ns
           kubectl get pods -A
+          kubectl -n flux-system get kustomizations -o wide
           kubectl -n flux-system get sources,kustomizations,helmreleases
-          kubectl -n flux-system describe kustomizations
+          kubectl -n flux-system describe kustomization flux-system
+          kubectl -n flux-system describe kustomization infra-controllers || true
+          kubectl -n flux-system describe kustomization infra-configs || true
+          kubectl -n flux-system describe kustomization apps || true
+          kubectl get gateway -A || true
+          kubectl describe gateway -A || true
+          kubectl get httproute -A || true
+          kubectl describe httproute -A || true
+          kubectl get secret passer-lan-tls -A || true
           for deploy in source-controller kustomize-controller helm-controller; do
             if kubectl -n flux-system get deploy "${deploy}" >/dev/null 2>&1; then
               kubectl -n flux-system logs deploy/"${deploy}" --tail=100
