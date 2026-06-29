@@ -22,6 +22,11 @@ jobs:
           node_image: kindest/node:v1.33.4
       - name: Install Flux in Kubernetes Kind
         run: flux install --components-extra source-watcher
+      - name: Verify checkout state
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          git status --short
       - name: Seed gateway TLS for e2e
         run: |
           set -euo pipefail
@@ -77,23 +82,27 @@ jobs:
         run: |
           set -euo pipefail
           echo "HelmReleases in the cluster:"
-          kubectl get helmreleases.helm.toolkit.fluxcd.io -A -o wide
+          kubectl get helmreleases.helm.toolkit.fluxcd.io -A || true
           mapfile -t helmreleases < <(
-            kubectl get helmreleases.helm.toolkit.fluxcd.io -A               -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}'
+            kubectl get helmreleases.helm.toolkit.fluxcd.io -A               -o jsonpath='{range .items[*]}{.metadata.namespace}{"|"}{.metadata.name}{"\n"}{end}'
           )
+          printf 'Structured HelmRelease entries:\n'
+          printf '  %s\n' "${helmreleases[@]}"
           if [ "${#helmreleases[@]}" -eq 0 ]; then
             echo "No HelmReleases found"
             exit 1
           fi
-          for hr in "${helmreleases[@]}"; do
-            namespace="$(awk '{print $1}' <<< "$hr")"
-            name="$(awk '{print $2}' <<< "$hr")"
-            if [ -z "$namespace" ] || [ -z "$name" ]; then
-              echo "Invalid HelmRelease entry: '$hr'"
+          for entry in "${helmreleases[@]}"; do
+            namespace="${entry%%|*}"
+            name="${entry#*|}"
+            if [ -z "$namespace" ] || [ -z "$name" ] || [ "$namespace" = "$name" ]; then
+              echo "Invalid HelmRelease entry: '$entry'"
               exit 1
             fi
+            echo "namespace='${namespace}' name='${name}'"
             echo "Waiting for HelmRelease: ${namespace}/${name}"
             if ! kubectl -n "$namespace" wait "helmrelease.helm.toolkit.fluxcd.io/${name}" --for=condition=ready --timeout=10m; then
+              echo "HelmRelease did not become ready: ${namespace}/${name}"
               kubectl -n "$namespace" describe "helmrelease.helm.toolkit.fluxcd.io/${name}" || true
               kubectl -n "$namespace" get events --sort-by=.lastTimestamp | tail -n 50 || true
               kubectl -n flux-system logs deploy/helm-controller --tail=100 || true
