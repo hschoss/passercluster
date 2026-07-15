@@ -1,0 +1,38 @@
+# Common patch applied to every node (CP + workers)
+- op: replace
+  path: /machine/kubelet/image
+  value: ghcr.io/siderolabs/kubelet:v1.35.0
+- op: replace
+  path: /machine/kubelet/defaultRuntimeSeccompProfileEnabled
+  value: true
+- op: replace
+  path: /machine/kubelet/disableManifestsDirectory
+  value: true
+- op: add
+  path: /machine/kubelet/extraMounts
+  value:
+    - destination: /var/lib/longhorn
+      type: bind
+      source: /var/lib/longhorn
+      options: [bind, rshared, rw]
+- op: replace
+  path: /machine/install/image
+  value: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:v1.13.2
+- op: replace
+  path: /machine/install/wipe
+  value: false
+- op: replace
+  path: /machine/features/diskQuotaSupport
+  value: true
+- op: replace
+  path: /machine/features/kubePrism/enabled
+  value: true
+- op: replace
+  path: /machine/features/kubePrism/port
+  value: 7445
+- op: replace
+  path: /machine/features/hostDNS/enabled
+  value: true
+- op: replace
+  path: /machine/features/hostDNS/forwardKubeDNSToHost
+  value: true

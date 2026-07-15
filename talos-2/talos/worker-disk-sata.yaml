@@ -1,0 +1,7 @@
+# For worker w-03 — SATA/USB disk (was /dev/sdh)
+- op: replace
+  path: /machine/install/diskSelector
+  value:
+    type: ssd
+- op: remove
+  path: /machine/install/disk

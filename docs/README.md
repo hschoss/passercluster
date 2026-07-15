@@ -11,6 +11,7 @@ Root-level Markdown files have been removed so the documentation lives in one pl
 - [Authentik](AUTHENTIK.md)
 - [Homelab setup](HOMELAB_SETUP.md)
 - [Homelab HTTPS](homelab-https.md)
+- [Velero setup](VELERO-SETUP.md)
 - [Velero backups](velero-backups.md)
 
 ## Runbooks
@@ -28,3 +29,4 @@ Root-level Markdown files have been removed so the documentation lives in one pl
 - [Authentik requirements review](AUTHENTIK-REQUIREMENTS.md)
 - [E2E Flux fix notes](E2E-FIX-NOTES.md)
 - [Next session prompt](NEXT-SESSION-PROMPT.md)
+- [Gute Nacht hand-off](gute-nacht.md)

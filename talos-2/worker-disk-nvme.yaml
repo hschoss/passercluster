@@ -1,0 +1,7 @@
+# For workers w-01 and w-02 — NVMe disk
+- op: replace
+  path: /machine/install/diskSelector
+  value:
+    type: nvme
+- op: remove
+  path: /machine/install/disk

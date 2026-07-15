@@ -1,0 +1,56 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: eqq7w2.dy1qki8v5jujyus7
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEJIendEd2Y4Q1pPWGJzUnh4MEErZEZNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5qQTFNVFl4TVRRNU1URmFGdzB6TmpBMU1UTXhNVFE1TVRGYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBNm9UTGtCWDJVK1NwY0dpbFZZQlRDYlFQcXJYc1d4Wmx0QXJmClFETFJpTGVqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVVVdQNjdBZWVXWVVYYUxkOQpGUWJqbGFJeUI0WXdCUVlESzJWd0EwRUE0ZVZ2QTNzbWIrb2VmdWdLUXBFUjhsUVFnaG9GYU0zTVdSaDUwMXAwCmJxU2JaU2dTb3Q4RE9OK09HamIrM0Z1S3RXaHR3Q1hacFJMbDIyZm9SbUk2QUE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.35.0
+        defaultRuntimeSeccompProfileEnabled: true
+        disableManifestsDirectory: true
+        extraMounts:
+            - destination: /var/lib/longhorn
+              type: bind
+              source: /var/lib/longhorn
+              options: [bind, rshared, rw]
+    features:
+        diskQuotaSupport: true
+        kubePrism:
+            enabled: true
+            port: 7445
+        hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+    install:
+        diskSelector:
+            type: nvme
+        image: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:v1.13.2
+        wipe: false
+cluster:
+    id: owREC9yWLHpm6TwFbO9YZ02yTP4MjRKCGQqUdiW0W9Q=
+    secret: 1GQlx7NjgLDK67TuJNSlsNpYU+fXURD+ZIVUz8+nZTo=
+    controlPlane:
+        endpoint: https://192.168.178.200:6443
+    clusterName: passercluster
+    network:
+        dnsDomain: cluster.local
+        podSubnets: [10.244.0.0/16]
+        serviceSubnets: [10.96.0.0/12]
+    token: d5xetp.i07zqv8b4k41o56v
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpVENDQVMrZ0F3SUJBZ0lRWGNraSt1R3c0bE9ibVp2d2ZlU3VrVEFLQmdncWhrak9QUVFEQWpBVk1STXcKRVFZRFZRUUtFd3ByZFdKbGNtNWxkR1Z6TUI0WERUSTJNRFV4TmpFeE5Ea3hNVm9YRFRNMk1EVXhNekV4TkRreApNVm93RlRFVE1CRUdBMVVFQ2hNS2EzVmlaWEp1WlhSbGN6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VICkEwSUFCSW9weTRBSnRnb1doaGxTU3RkQ1FDc3NNUlM2RkUrSUpZU1pVRUx0VFgrVEhhSjRRWE1OdFhENTNCZlUKc3paVmtmYVU1VHV3WEQ0VGNlVnFrQ1MwWloyallUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWRCZ05WSFNVRQpGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFCkZnUVVLNmVNdEUzTGpxNFNiUmxnanRQR0JKcXRnVjh3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUlnTGtVeTh1WDkKSmZycFBhVTQwa3lIZ1dNYnhJUzA3R1JLZzdjZVQxbkZYaVVDSVFDQkpwUmFDQ0RUYUQrc3lORGNtRFlHQURaSgpmZHNUdnlTZU5KSytSbWdFVGc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes:
+                disabled: true
+            service: {}
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: passer-w-02

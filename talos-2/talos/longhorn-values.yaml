@@ -1,0 +1,8 @@
+defaultSettings:
+  defaultDataPath: /var/lib/longhorn/
+  defaultReplicaCount: 3
+  createDefaultDiskLabeledNodes: true
+  storageReservedPercentageForDefaultDisk: 10
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 3

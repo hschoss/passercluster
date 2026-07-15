@@ -1,0 +1,105 @@
+
+Good news first: your cluster is actually fine — nodes are `Ready`, all four are up. The command errors are mostly because you ran them from `~` instead of inside the repo directory (so `talos/passer-cp-01.yaml` wasn't found), and `<IP>`/`0X` were literal placeholders you didn't substitute.
+
+Now to your actual question — **yes, you should absolutely pull the live config from each running node instead of relying on my hand-written reconstruction.** This is the correct and safer approach for a few reasons:
+
+1. My configs were rebuilt from what you pasted into chat — they're a best-effort reconstruction, not a guaranteed byte-for-byte match of what's actually running.
+2. Talos generates some fields at runtime (cert SANs, actual resolved disk, etc.) that you want captured exactly as the cluster knows them.
+3. Pulling live config means "save what works" rather than "hope my patch matches reality."
+
+Here's how to do it correctly:
+
+
+cat > /home/claude/pull-live-configs.md << 'EOF'
+# Pull Live Config From Running Nodes
+
+Run this from inside your repo directory (`cd ~/gh/passercluster` or wherever `talos/` lives).
+
+## 1. Pull current config from each node
+
+```bash
+cd talos
+
+# Control plane
+talosctl get machineconfig \
+  --nodes 192.168.178.200 \
+  --talosconfig talosconfig \
+  -o yaml > live-passer-cp-01.yaml
+
+# Workers
+talosctl get machineconfig \
+  --nodes 192.168.178.201 \
+  --talosconfig talosconfig \
+  -o yaml > live-passer-w-01.yaml
+
+talosctl get machineconfig \
+  --nodes 192.168.178.202 \
+  --talosconfig talosconfig \
+  -o yaml > live-passer-w-02.yaml
+
+talosctl get machineconfig \
+  --nodes 192.168.178.203 \
+  --talosconfig talosconfig \
+  -o yaml > live-passer-w-03.yaml
+```
+
+**Note:** `talosctl get machineconfig -o yaml` returns the config wrapped in a Talos resource envelope (with `metadata`/`spec` framing), not a bare applyable config. You need the actual `spec` content. Use this instead for a directly re-appliable file:
+
+```bash
+talosctl get machineconfig \
+  --nodes 192.168.178.200 \
+  --talosconfig talosconfig \
+  -o yaml | yq '.spec' -o yaml > live-passer-cp-01.yaml
+```
+
+If you don't have `yq`, install it:
+```bash
+sudo snap install yq   # or: go install github.com/mikefarah/yq/v4@latest
+```
+
+## 2. Verify the pulled config is valid and re-appliable
+
+```bash
+talosctl validate --mode metal --config live-passer-cp-01.yaml
+```
+
+## 3. Diff against what you currently have checked in
+
+```bash
+diff talos/passer-cp-01.yaml talos/live-passer-cp-01.yaml
+```
+
+This tells you exactly where my reconstructed version and the real running config disagree — fix the checked-in version to match reality, or just replace it outright.
+
+## 4. Replace your checked-in configs with the live ones
+
+```bash
+mv live-passer-cp-01.yaml passer-cp-01.yaml
+mv live-passer-w-01.yaml passer-w-01.yaml
+mv live-passer-w-02.yaml passer-w-02.yaml
+mv live-passer-w-03.yaml passer-w-03.yaml
+
+git add passer-*.yaml
+git commit -m "chore: sync talos configs from live cluster state"
+```
+
+## 5. Test apply with --dry-run before trusting it for real recovery
+
+```bash
+talosctl apply-config \
+  --nodes 192.168.178.201 \
+  --talosconfig talosconfig \
+  --file passer-w-01.yaml \
+  --dry-run
+```
+
+A clean dry-run on a node already running this exact config should show **no diff at all**. That's your proof the saved config truly matches what's live — and what you'll be reapplying months from now when a node actually dies.
+EOF
+
+cp /home/claude/pull-live-configs.md /mnt/user-data/outputs/pull-live-configs.md
+echo "done"
+
+Output
+done
+Done
+
