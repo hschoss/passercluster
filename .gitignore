@@ -20,3 +20,7 @@ talos/talosconfig.new
 
 # Locally generated TLS material
 secrets/
+node_modules/
+package-lock.json
+package.json
+*.log

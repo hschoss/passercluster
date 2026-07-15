@@ -126,6 +126,7 @@ Talos-specific configuration, node patches, and recovery artifacts.
 Supplementary documentation.
 
 - [`HOMELAB_SETUP.md`](HOMELAB_SETUP.md) - setup notes for the homelab stack
+- [`VELERO-SETUP.md`](VELERO-SETUP.md) - Velero setup, backup, and restore runbook
 - [`velero-backups.md`](velero-backups.md) - Velero backup and restore guide
 - [`infrastructure/longhorn-README.md`](../infrastructure/longhorn-README.md) - Longhorn-specific storage notes
 
