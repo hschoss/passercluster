@@ -7,7 +7,7 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        kubernetes.io/hostname: talos-3nt-pq2
+        kubernetes.io/hostname: talos-7tm-1kh
     valkey:
       persistence:
         data:
