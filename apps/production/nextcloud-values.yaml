@@ -11,14 +11,14 @@ spec:
     nextcloud:
       host: nextcloud.passer.lan
     nodeSelector:
-      kubernetes.io/hostname: talos-3nt-pq2
+      kubernetes.io/hostname: talos-7tm-1kh
     persistence:
       size: 500Gi
       storageClass: longhorn-nvme-202
     mariadb:
       primary:
         nodeSelector:
-          kubernetes.io/hostname: talos-3nt-pq2
+          kubernetes.io/hostname: talos-7tm-1kh
         persistence:
           size: 20Gi
           storageClass: longhorn-nvme-202

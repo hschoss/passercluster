@@ -3,10 +3,10 @@
 ## Architecture
 
 ```
-192.168.178.200 / talos-2sm-xkd  control plane only, no Longhorn data
-192.168.178.201 / talos-z8c-je7  NVMe performance-secondary  /var/mnt/longhorn-performance-secondary
-192.168.178.202 / talos-3nt-pq2  NVMe performance-primary    /var/lib/longhorn plus /var/mnt/longhorn-sdb
-192.168.178.203 / talos-w45-5vh  HDD capacity + backup       /var/mnt/longhorn-capacity-*
+192.168.178.200 / talos-ja7-1cq  control plane only, no Longhorn data
+192.168.178.201 / talos-m2p-286  NVMe performance-secondary  /var/mnt/longhorn-performance-secondary
+192.168.178.202 / talos-7tm-1kh  NVMe performance-primary    /var/lib/longhorn plus /var/mnt/longhorn-sdb
+192.168.178.203 / talos-8bp-pih  HDD capacity + backup       /var/mnt/longhorn-capacity-*
 ```
 
 Longhorn is installed by Flux from `infrastructure/controllers/longhorn.yaml`. Configuration is applied after the Helm release by `infra-configs` in `clusters/production/infrastructure.yaml`.

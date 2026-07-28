@@ -15,7 +15,7 @@ kubectl -n longhorn-system get pods -o wide
 
 echo "==> Longhorn nodes"
 kubectl -n longhorn-system get nodes.longhorn.io \
-  talos-z8c-je7 talos-3nt-pq2 talos-w45-5vh \
+  talos-m2p-286 talos-7tm-1kh talos-8bp-pih \
   -o custom-columns=NAME:.metadata.name,SCHEDULABLE:.spec.allowScheduling,TAGS:.spec.tags
 
 echo "==> StorageClasses"
