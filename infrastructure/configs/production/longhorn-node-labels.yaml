@@ -149,7 +149,7 @@ spec:
       tags:
         - ssd
         - node-203
-    capacity-sda:
+    capacity-sdf:
       path: /var/mnt/capacity-sda
       allowScheduling: true
       evictionRequested: false
