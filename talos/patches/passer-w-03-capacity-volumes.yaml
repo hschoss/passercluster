@@ -1,0 +1,33 @@
+# Existing XFS volumes for Longhorn capacity/media storage.
+#
+# Node: 192.168.178.203 (talos-8bp-pih)
+# Physical disks:
+#   /dev/sda1 = WDC? No — 4 TB Seagate, WWN 0x5000c500c4c3387c
+#   /dev/sdg1 = 4 TB Seagate, WWN 0x5000c500c4c34fa3
+#
+# These partitions already exist and are XFS. This configuration mounts them;
+# it does NOT repartition, format, or wipe them.
+
+---
+apiVersion: v1alpha1
+kind: ExistingVolumeConfig
+name: capacity-sda
+discovery:
+  volumeSelector:
+    match: volume.dev_path == "/dev/sda1"
+mount:
+  readOnly: false
+  disableAccessTime: true
+  secure: false
+
+---
+apiVersion: v1alpha1
+kind: ExistingVolumeConfig
+name: capacity-sdg
+discovery:
+  volumeSelector:
+    match: volume.dev_path == "/dev/sdg1"
+mount:
+  readOnly: false
+  disableAccessTime: true
+  secure: false

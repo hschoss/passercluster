@@ -149,8 +149,8 @@ spec:
       tags:
         - ssd
         - node-203
-    capacity-sdf:
-      path: /var/mnt/longhorn-capacity-sdf
+    capacity-sda:
+      path: /var/mnt/capacity-sda
       allowScheduling: true
       evictionRequested: false
       storageReserved: 107374182400
@@ -160,7 +160,7 @@ spec:
         - media
         - backup
     capacity-sdg:
-      path: /var/mnt/longhorn-capacity-sdg
+      path: /var/mnt/capacity-sdg
       allowScheduling: true
       evictionRequested: false
       storageReserved: 107374182400
