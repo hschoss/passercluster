@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>finance.passer.lan &mdash; Findash</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:"Times New Roman",Georgia,serif;max-width:44em;margin:2em auto;padding:0 1em;line-height:1.5;color:#111;background:#fff}
+h1{font-size:1.4em;margin:0 0 .2em 0}
+h2{font-size:1em;text-transform:uppercase;letter-spacing:.05em;margin:2em 0 .4em 0;border-bottom:1px solid #ccc;padding-bottom:.2em}
+ul{padding-left:1.2em;margin:.4em 0}
+li{margin:.15em 0}
+a{color:#0000ee;text-decoration:underline}
+a:visited{color:#551a8b}
+code{font-family:Menlo,Consolas,monospace;font-size:.9em;background:#f4f4f4;padding:0 .2em;border-radius:2px}
+hr{border:0;border-top:1px solid #ccc;margin:2.5em 0 1em 0}
+small{color:#555}
+p{margin:.5em 0}
+pre{font-family:Menlo,Consolas,monospace;font-size:.85em;background:#f4f4f4;padding:.6em .8em;border-radius:2px;overflow:auto}
+</style>
+</head>
+<body>
+
+<h1>Findash &mdash; long-term stock dashboard</h1>
+<p><small>First version, reserved endpoint. Not analytics-ready yet.</small></p>
+
+<h2>Status</h2>
+<ul>
+<li>Hostname <code>finance.passer.lan</code> lives &mdash; routed through the Envoy Gateway on <code>192.168.178.240</code>.</li>
+<li>Container image for the Dash app is not built yet, so this is a placeholder page.</li>
+<li>The upstream source database that feeds prices is not configured yet either &mdash; the app supports a <code>seed-demo</code> synthetic dataset for development in the meantime.</li>
+</ul>
+
+<h2>What Findash is</h2>
+<p>A modular finance-analysis dashboard for a configurable list of instruments (indices, ETFs, commodities). Two modes: historical exploration and probabilistic forecasts from nightly batch runs. Research and analysis only &mdash; not investment advice.</p>
+
+<h2>What still needs to happen for the real app to boot</h2>
+<ol>
+<li>Build the container image from <code>~/gh/longterm-stock-dashboard-py/docker/Dockerfile</code> and push it to a registry the cluster can pull from (typically <code>ghcr.io/hschoss/findash:&lt;tag&gt;</code>).</li>
+<li>Point the <code>findash-app</code> Deployment&#39;s <code>image:</code> at that tag &mdash; the rest of the wiring (namespace, Postgres via CNPG, Service, HTTPRoute, DB migrations job) is already in the repo under <code>apps/base/finance/</code>.</li>
+<li>Seed with <code>findash seed-demo</code> so the dashboard has something to draw until the source database is wired up.</li>
+</ol>
+
+<h2>Where the code lives</h2>
+<ul>
+<li>App: <a href="https://github.com/hschoss/longterm-stock-dashboard-py">github.com/hschoss/longterm-stock-dashboard-py</a></li>
+<li>Cluster manifests: <a href="https://github.com/hschoss/passercluster/tree/main/apps/base/finance"><code>hschoss/passercluster</code> &rarr; <code>apps/base/finance/</code></a></li>
+</ul>
+
+<hr>
+<p><small>Back to <a href="https://passer.lan/">passer.lan</a>. Static placeholder served by nginx from a ConfigMap.</small></p>
+
+</body>
+</html>

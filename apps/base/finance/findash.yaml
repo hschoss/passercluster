@@ -1,0 +1,146 @@
+# Real Findash app manifests. NOT active yet — this file is not listed in
+# kustomization.yaml until a container image exists. See docs/FINDASH-DEPLOY.md
+# for the flip: build/push image, add this file to resources, drop the
+# placeholder Deployment, repoint the HTTPRoute to `findash:5000`.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: findash
+  namespace: finance
+  labels:
+    app.kubernetes.io/name: findash
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: findash
+  ports:
+    - name: http
+      port: 5000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: findash
+  namespace: finance
+  labels:
+    app.kubernetes.io/name: findash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: findash
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: findash
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: findash
+          # TODO: point at the pushed image, e.g.
+          #   ghcr.io/hschoss/findash:0.1.0
+          image: ghcr.io/hschoss/findash:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: findash-config
+            - secretRef:
+                name: findash-db
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "1",  memory: 1Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: findash-config
+  namespace: finance
+data:
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  DEBUG: "false"
+  DISPLAY_TIMEZONE: Europe/Berlin
+  STALE_FORECAST_HOURS: "36"
+  # DATABASE_URL is composed inside the pod from the findash-db secret keys;
+  # SOURCE_DATABASE_URL stays empty until the upstream source DB is reachable.
+  SOURCE_DATABASE_URL: ""
+---
+# Postgres for the app's own storage via CNPG (already installed in the
+# cluster). Small — this is the app-side DB, not the upstream price source.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: findash-postgres
+  namespace: finance
+spec:
+  instances: 1
+  bootstrap:
+    initdb:
+      database: findash
+      owner: findash
+      secret:
+        name: findash-db
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  resources:
+    requests: { cpu: 50m,  memory: 128Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+---
+# One-shot Job: run alembic migrations + optional seed-demo. Kicks in after
+# Postgres is up. Idempotent — alembic tracks state, seed-demo is a no-op if
+# the demo rows already exist.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: findash-migrate
+  namespace: finance
+  annotations:
+    kustomize.toolkit.fluxcd.io/force: "true"
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: ghcr.io/hschoss/findash:latest
+          command: ["/bin/sh", "-euxc"]
+          args:
+            - |
+              uv run alembic upgrade head
+              uv run findash seed-demo || true
+          envFrom:
+            - configMapRef:
+                name: findash-config
+            - secretRef:
+                name: findash-db

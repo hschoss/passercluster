@@ -9,6 +9,7 @@ resources:
   - ../base/paperless-ngx
   - ../base/authentik
   - ../base/passer-home
+  - ../base/finance
 patches:
   - path: podinfo-values.yaml
     target:

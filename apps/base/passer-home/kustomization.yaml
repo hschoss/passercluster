@@ -27,5 +27,6 @@ configMapGenerator:
       - ../../../docs/TROUBLESHOOTING.md
       - ../../../docs/velero-backups.md
       - ../../../docs/VELERO-SETUP.md
+      - ../../../docs/FINDASH-DEPLOY.md
 generatorOptions:
   disableNameSuffixHash: false

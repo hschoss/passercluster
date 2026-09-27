@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: finance
+resources:
+  - namespace.yaml
+  - placeholder-deployment.yaml
+  - httproute.yaml
+  # When the Findash image is built and pushed:
+  # 1. Uncomment the two resources below
+  # 2. Drop `placeholder-deployment.yaml` above
+  # 3. In httproute.yaml, repoint backendRefs to `findash` port 5000
+  # See docs/FINDASH-DEPLOY.md
+  # - findash.yaml
+  # - findash-db.secret.yaml
+configMapGenerator:
+  - name: finance-placeholder-nginx
+    files:
+      - default.conf=nginx.conf
+  - name: finance-placeholder-www
+    files:
+      - index.html
