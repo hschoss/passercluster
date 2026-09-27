@@ -9,6 +9,9 @@ spec:
   postgresql:
     shared_preload_libraries:
       - "vchord.so"
+  affinity:
+    nodeSelector:
+      kubernetes.io/hostname: talos-m2p-286
   storage:
     size: 20Gi
     storageClass: longhorn-nvme-201
@@ -18,7 +21,7 @@ spec:
       owner: immich
       secret:
         name: immich-db
-      postInitSQL:
+      postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS vector;
         - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
         - CREATE EXTENSION IF NOT EXISTS cube CASCADE;

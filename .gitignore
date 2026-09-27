@@ -1,26 +1,42 @@
-# GitHub actions binaries
+# GitHub Actions binaries
 bin/
 
-# Talos secrets & configs
+# Talos machine configs & credentials (never commit)
 talos/*.yaml
-talos/talosconfig
+talos/talosconfig*
 talos/*kubeconfig*
+talos/secrets.yaml
 !talos/*-template.yaml
-# Local docs and prompt notes
+
+# Historic Talos config dumps
+talos-*/
+/talosconfig
+/talosconfiG
+
+# Handover / scratch notes
 NEW-PROMPT.md
+HANDOVER.md
+almost-finished.md
+/passercluster-on-local-server/
 
 # Local agent metadata
 .claude/
 talos/.claude/
 
-# Talos recovery artifacts
+# Talos recovery artefacts
 talos/recovered-talosconfig*/
 talos/talosconfig.expired-*
 talos/talosconfig.new
+talos/*.snapshot
+talos/*.snapshot.part
 
 # Locally generated TLS material
 secrets/
+
+# Stray Node artefacts
 node_modules/
 package-lock.json
 package.json
+
+# Logs
 *.log

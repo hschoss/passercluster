@@ -3,7 +3,7 @@
 This cluster exposes services on `passer.lan` through Envoy Gateway and uses
 CoreDNS plus ExternalDNS to keep the names in sync.
 
-TLS details now live in [Homelab HTTPS](homelab-https.md).
+TLS uses the self-signed `passer-lan-tls` Secret rolled out by `scripts/apply-passer-lan-tls-secret.sh`.
 
 ## Path
 

@@ -1,89 +1,108 @@
-# Operations Guide
+# Operations
 
-This repository is managed through Flux. The practical rule is simple: edit Git,
-then reconcile the affected Flux layer, then verify the live objects.
-
-## Reconcile Order
-
-Reconcile in this order when making infrastructure or app changes:
-
-1. `infra-controllers`
-2. `infra-configs`
-3. `infra-velero`
-4. `infra-velero-schedules`
-5. `apps`
-
-Example commands:
+Day-to-day commands for running the cluster. Every command assumes:
 
 ```bash
-flux get kustomizations -A
-flux reconcile kustomization infra-controllers -n flux-system
-flux reconcile kustomization infra-configs -n flux-system
-flux reconcile kustomization infra-velero -n flux-system
-flux reconcile kustomization apps -n flux-system
+cd ~/gh/passercluster
+export KUBECONFIG=$PWD/talos/kubeconfig
+export TALOSCONFIG=$PWD/talos/talosconfig
 ```
 
-## What To Verify
-
-After a reconcile, confirm the following:
+## Health board
 
 ```bash
-kubectl get gateway -A
-kubectl get httproute -A
-kubectl get secret passer-lan-tls -A
-kubectl get svc -A | grep LoadBalancer
-kubectl get pods -A
+kubectl get nodes -o wide                       # 4 nodes, all Ready
+flux get kustomizations -A                      # all True except flux-system (Suspended is OK, see below)
+flux get helmreleases -A                        # every HelmRelease Ready=True
+kubectl get gateway -A                          # PROGRAMMED=True, ADDRESS=192.168.178.240
+kubectl get httproute -A                        # each service on its passer.lan host
+kubectl -n longhorn-system get volumes | head   # attached / healthy
 ```
 
-Expected signals for a healthy cluster:
+If any of these are wrong, jump to `TROUBLESHOOTING.md`.
 
-- Flux kustomizations report `Ready`
-- the Envoy Gateway has the expected LoadBalancer IP
-- HTTPRoutes are attached to the gateway
-- the `passer-lan-tls` secret exists in `envoy-gateway-system`
-- application namespaces have running pods
+## Flux top-level Kustomization
 
-## Network Model
-
-The public path through the LAN is:
-
-`LAN client -> Pi-hole -> CoreDNS -> Envoy Gateway -> application service`
-
-Current fixed IPs:
-
-- Envoy Gateway: `192.168.178.240`
-- CoreDNS: `192.168.178.241`
-
-The canonical service domain is `passer.lan`.
-
-## DNS And TLS
-
-- `ExternalDNS` watches `gateway-httproute` sources and writes `passer.lan` records into CoreDNS.
-- `scripts/generate-passer-lan-cert.sh` creates the self-signed certificate locally.
-- `scripts/apply-passer-lan-tls-secret.sh` rolls the `passer-lan-tls` Secret into the namespaces that need it.
-- Browsers that do not trust the certificate will show the normal self-signed warning.
-
-## Storage Model
-
-Longhorn handles persistent storage for the stateful workloads. Use the dedicated storage documentation before changing disks, node labels, or recurring job definitions:
-
-- [Longhorn notes](../infrastructure/longhorn-README.md)
-- `scripts/longhorn-validate-disks.sh`
-- `scripts/longhorn-health-check.sh`
-
-## Talos Checks
-
-If a node or control plane issue is suspected, use Talos rather than SSH:
+The `flux-system` Kustomization is intentionally **suspended** in the running cluster because the on-disk `gotk-sync.yaml` used to point at an SSH URL with a deleted deploy key. After the first push of the cleaned-up repo, resume it:
 
 ```bash
-cd ~/gh/passercluster/talos
-talosctl health --nodes 192.168.178.200 --endpoints 192.168.178.200 --talosconfig ./talosconfig
-talosctl dashboard --nodes 192.168.178.200 --endpoints 192.168.178.200 --talosconfig ./talosconfig
+flux -n flux-system resume kustomization flux-system
 ```
 
-## Before Pushing
+From then on, everything reconciles from `main` automatically.
 
-1. Run `git status` and confirm that only intended files are staged.
-2. Keep secrets, recovery dumps, and local config snapshots out of the commit.
-3. Prefer small commits that map to one change in the GitOps tree.
-4. If you changed hostnames, update the app URL values and HTTPRoutes together.
+## Reconcile flow (fast → slow)
+
+```bash
+flux reconcile source git flux-system -n flux-system            # pull the latest commit
+flux reconcile kustomization infra-controllers -n flux-system   # CRDs, controllers
+flux reconcile kustomization infra-configs -n flux-system       # Gateway, routes, DNS
+flux reconcile kustomization apps -n flux-system                # HelmReleases (apps)
+```
+
+Dependencies are wired via `dependsOn`, so reconciling `apps` alone is usually enough after an app-only change.
+
+## Talk to Talos
+
+```bash
+talosctl -n 192.168.178.200 health
+talosctl -n 192.168.178.200 dashboard
+talosctl -n 192.168.178.201 logs kubelet -f          # worker logs
+talosctl -n 192.168.178.201 reboot                   # kexec reboot, ~60 s
+```
+
+## App URLs
+
+| App | URL | Ready when |
+|---|---|---|
+| Nextcloud | https://nextcloud.passer.lan | pods `nextcloud`, `nextcloud-mariadb-0` are 1/1 |
+| Immich | https://immich.passer.lan | pods `immich-server`, `immich-postgres-1`, `immich-valkey`, `immich-machine-learning` all 1/1 |
+| Jellyfin | https://jellyfin.passer.lan | pod `jellyfin` 1/1 |
+| Paperless | https://paperless.passer.lan | pod `paperless-ngx` 1/1 |
+| Vaultwarden | https://vaultwarden.passer.lan | pod `vaultwarden` 1/1 |
+| Authentik | https://auth.passer.lan | server + worker 1/1 (may take ~5 min first boot) |
+| Longhorn | https://longhorn.passer.lan | any longhorn-ui pod 1/1 |
+| Podinfo | https://podinfo.passer.lan | any podinfo pod 1/1 |
+
+Quick check from any LAN machine:
+
+```bash
+for h in nextcloud immich jellyfin; do
+  curl -skI --resolve $h.passer.lan:443:192.168.178.240 https://$h.passer.lan/ | head -1
+done
+```
+
+## TLS and DNS
+
+- Self-signed cert for `*.passer.lan` sits in `secrets/`. Regenerate with `scripts/generate-passer-lan-cert.sh`, then roll it into every namespace with `scripts/apply-passer-lan-tls-secret.sh`.
+- `ExternalDNS` writes A records into CoreDNS at `192.168.178.241`; Pi-hole forwards `*.passer.lan` there.
+- Browser cert warning is expected. Import `secrets/passer-lan.crt` into the OS/browser trust store on machines you use daily.
+
+## Storage (Longhorn)
+
+- Storage classes are per-node: `longhorn-nvme-201`, `longhorn-nvme-202`, `longhorn-capacity-203`. They pin data to a specific worker via `nodeSelector` + `diskSelector` tags.
+- After a worker reboot, watch `kubectl -n longhorn-system get volumes` until every attached volume is `healthy` again.
+- Dashboard: `kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80` or `https://longhorn.passer.lan`.
+
+## Backups (Velero)
+
+Full docs in `docs/VELERO-SETUP.md` and `docs/velero-backups.md`. Quick check:
+
+```bash
+kubectl -n velero get backup
+kubectl -n velero get schedule
+```
+
+## Change loop
+
+1. Edit under `apps/` (per-app values, HelmRelease) or `infrastructure/`.
+2. `git status` – confirm no secrets slipped in (all `*.secret.yaml` should look like `ENC[…]`).
+3. Commit, push.
+4. `flux reconcile source git flux-system -n flux-system` to pull the new commit immediately, otherwise wait 1 min.
+5. Watch: `flux get kustomizations -A -w`.
+
+## Before pushing
+
+- No plaintext credentials outside of `secrets/` (which is gitignored).
+- `talos/*.yaml` and `talos/talosconfig` must stay gitignored.
+- `sops -d <file>.secret.yaml | head -3` should decode – if it errors, you'll break every downstream Kustomization.

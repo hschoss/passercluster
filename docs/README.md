@@ -1,32 +1,17 @@
-# Documentation Index
+# Docs
 
-This directory contains the canonical Markdown documentation for the repo.
-Root-level Markdown files have been removed so the documentation lives in one place.
+Start here:
 
-## Start Here
+- **[OPERATIONS.md](OPERATIONS.md)** – daily commands, reconcile flow, app URLs.
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** – failure symptoms and the concrete fix.
 
-- [Repository map](REPOSITORY_MAP.md)
-- [Operations guide](OPERATIONS.md)
-- [Service map](SERVICES.md)
-- [Authentik](AUTHENTIK.md)
-- [Homelab setup](HOMELAB_SETUP.md)
-- [Homelab HTTPS](homelab-https.md)
-- [Velero setup](VELERO-SETUP.md)
-- [Velero backups](velero-backups.md)
+Reference:
 
-## Runbooks
-
-- [Cluster setup](CLUSTER-SETUP.md)
-- [Ingress and DNS](INGRESS.md)
-- [Current state](CURRENT-STATE.md)
-- [Authentik status](CURRENT-STATUS.md)
-- [Plan](PLAN.md)
-- [Repository structure](STRUCTURE.md)
-- [Command reference](COMMANDS.md)
-
-## Notes
-
-- [Authentik requirements review](AUTHENTIK-REQUIREMENTS.md)
-- [E2E Flux fix notes](E2E-FIX-NOTES.md)
-- [Next session prompt](NEXT-SESSION-PROMPT.md)
-- [Gute Nacht hand-off](gute-nacht.md)
+- [SERVICES.md](SERVICES.md) – host → namespace → service map.
+- [INGRESS.md](INGRESS.md) – Envoy Gateway + HTTPRoutes overview.
+- [CLUSTER-SETUP.md](CLUSTER-SETUP.md) – bootstrap and recovery runbook.
+- [CONTROL-PLANE-FIX.md](CONTROL-PLANE-FIX.md) – past incidents on `.200`, procedure to reapply the CP config.
+- [AUTHENTIK.md](AUTHENTIK.md) – SSO setup.
+- [VELERO-SETUP.md](VELERO-SETUP.md) / [velero-backups.md](velero-backups.md) – backup pipeline.
+- [COMMANDS.md](COMMANDS.md) – copy/paste-friendly command index.
+- `../infrastructure/longhorn-README.md` – storage notes and node/disk tagging.
