@@ -50,5 +50,12 @@ https://auth.passer.lan
 
 ## Next step
 
-After the initial admin account is created, add proxy providers and applications for the services you want protected.
-That is the step that turns Authentik from a standalone login portal into the primary gate for the rest of the stack.
+After the initial admin account is created, wire the apps. Providers
+and applications for Nextcloud, Immich, Paperless and Jellyfin are
+already declared in `apps/base/authentik/authentik-blueprints.secret.yaml`
+(SOPS-encrypted) — Authentik picks the blueprint up automatically from
+`/blueprints/custom/` on every restart. The per-app side of the wiring
+(what to set in Immich's admin UI, the Jellyfin plugin, the
+Nextcloud bootstrap Job) is documented in
+[`AUTHENTIK-SSO.md`](AUTHENTIK-SSO.md). Vaultwarden has no upstream
+OIDC support and stays outside the SSO ring.

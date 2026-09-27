@@ -63,7 +63,47 @@ flux -n flux-system describe kustomization <name>
 Common causes:
 - `sops-age` secret missing → `kubectl -n flux-system create secret generic sops-age --from-file=age.agekey=$HOME/.config/sops/age/keys.txt`
 - New CRD applied in the same reconcile as a CR using it → reconcile again after a few seconds.
-- `dependsOn` upstream is not Ready.
+- `dependsOn` upstream is not Ready — walk up the chain until you find the offender.
+
+## `infra-configs` is `NotReady`, `apps` never rolls out
+
+Almost always Longhorn's admission webhook refusing a change:
+
+```
+admission webhook "validator.longhorn.io" denied the request
+```
+
+Two flavours seen in this cluster:
+
+**Ghost node** — a hostname from a previous cluster generation is
+still baked into `infrastructure/configs/longhorn-node-labels.yaml`.
+Longhorn creates a `Node.longhorn.io` CR for it, marks it NotReady
+(`Kubernetes node <name> not ready: NodeStatusNeverUpdated`) and
+then refuses every further apply against the file. Cleanup:
+
+```bash
+# 1. rename in both copies of the file (base + production)
+sed -i 's/<old-hostname>/<new-hostname>/g' \
+  infrastructure/configs/longhorn-node-labels.yaml \
+  infrastructure/configs/production/longhorn-node-labels.yaml
+git commit -am "Fix ghost hostname in Longhorn labels" && git push
+
+# 2. wipe the stale CRs (safe because they have no live disks)
+kubectl -n longhorn-system delete node.longhorn.io <old-hostname>
+kubectl delete node <old-hostname>
+```
+
+**Blocked disk removal** — the manifest removed a disk from a node,
+but Longhorn refuses because replicas or backing images still sit on
+it. Open the Longhorn UI → the affected node → the offending disk →
+"Request Eviction". Wait until the disk is empty, then let Flux apply.
+
+Once cleared:
+
+```bash
+flux reconcile kustomization infra-configs -n flux-system
+flux reconcile kustomization apps -n flux-system
+```
 
 ## `GitRepository` failing to pull
 

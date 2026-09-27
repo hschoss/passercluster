@@ -1,46 +1,59 @@
-# Service Map
+# Service map
 
-This repository currently exposes private services through `https://<service>.passer.lan`.
+Every private URL served by the cluster and where it terminates.
 
-## Core Endpoints
+## Production
 
-| Service | Namespace | URL | Notes |
-| --- | --- | --- | --- |
-| Immich | `immich` | `https://immich.passer.lan` | Route targets `immich-server:2283`. |
-| Authentik | `authentik` | `https://auth.passer.lan` | Primary login gateway; initial setup is over HTTP before daily HTTPS use. |
-| Jellyfin | `jellyfin` | `https://jellyfin.passer.lan` | Media service. |
-| Nextcloud | `nextcloud` | `https://nextcloud.passer.lan` | Host URL must match the app config. |
-| Paperless-ngx | `paperless-ngx` | `https://paperless.passer.lan` | URL is set in the app values. |
-| Podinfo | `podinfo` | `https://podinfo.passer.lan` | Good for ingress smoke tests. |
-| Vaultwarden | `vaultwarden` | `https://vaultwarden.passer.lan` | Password manager. |
-| Longhorn | `longhorn-system` | `https://longhorn.passer.lan` | Storage dashboard. |
+| Service        | URL                              | Namespace       | Backend Service : port     | Notes                                             |
+|----------------|----------------------------------|-----------------|----------------------------|---------------------------------------------------|
+| Landing page   | `https://passer.lan`             | `passer-home`   | `passer-home:80`           | Static nginx, links to services + `/docs/`        |
+| Findash        | `https://finance.passer.lan`     | `finance`       | `finance-placeholder:80` (placeholder) → `findash:5000` (when image is built) | See `FINDASH-DEPLOY.md`         |
+| Authentik      | `https://auth.passer.lan`, `https://authentik.passer.lan` | `authentik`     | `authentik-server:80`      | Two hostnames, one Service; SSO for the stack     |
+| Nextcloud      | `https://nextcloud.passer.lan`   | `nextcloud`     | `nextcloud:8080`           | Host URL must match chart values                  |
+| Immich         | `https://immich.passer.lan`      | `immich`        | `immich-server:2283`       | Media library and mobile app                      |
+| Jellyfin       | `https://jellyfin.passer.lan`    | `jellyfin`      | `jellyfin:8096`            | Media streaming, config on `talos-8bp-pih`         |
+| Paperless-ngx  | `https://paperless.passer.lan`   | `paperless-ngx` | `paperless-ngx:8000`       | Document archive                                  |
+| Vaultwarden    | `https://vaultwarden.passer.lan` | `vaultwarden`   | `vaultwarden:80`           | Password manager, no SSO available                |
+| Longhorn UI    | `https://longhorn.passer.lan`    | `longhorn-system` | `longhorn-frontend:80`   | Storage dashboard                                 |
+| Podinfo        | `https://podinfo.passer.lan`     | `podinfo`       | `podinfo:9898`             | Smoke-test app for gateway / TLS / DNS            |
 
-## Staging Endpoints
+Every one of these is served by the same `Gateway/envoy` in
+`envoy-gateway-system` on `192.168.178.240` — see
+[INGRESS.md](INGRESS.md).
 
-Where staging overlays exist, the names are separate:
+## Staging overlays
 
-| Service | Namespace | URL |
-| --- | --- | --- |
-| Jellyfin staging | `jellyfin` | `https://jellyfin-staging.passer.lan` |
-| Nextcloud staging | `nextcloud` | `https://nextcloud-staging.passer.lan` |
-| Podinfo staging | `podinfo` | `https://podinfo-staging.passer.lan` |
-| Vaultwarden staging | `vaultwarden` | `https://vaultwarden-staging.passer.lan` |
+Wherever `apps/staging/` defines an overlay, the hostname is a
+separate one:
 
-## DNS And TLS Facts
+| Service              | URL                                 |
+|----------------------|-------------------------------------|
+| Jellyfin staging     | `https://jellyfin-staging.passer.lan`   |
+| Nextcloud staging    | `https://nextcloud-staging.passer.lan`  |
+| Podinfo staging      | `https://podinfo-staging.passer.lan`    |
+| Vaultwarden staging  | `https://vaultwarden-staging.passer.lan`|
 
-- Envoy Gateway listens on `192.168.178.240`.
-- CoreDNS listens on `192.168.178.241`.
-- The HTTPS listener uses the locally generated `passer-lan-tls` Secret.
-- Browsers will warn unless you manually trust the self-signed certificate.
-- If local DNS returns `NXDOMAIN`, query CoreDNS directly or fix the Pi-hole forwarding path first.
+## Facts to remember
 
-## Quick Checks
+- Envoy Gateway: `192.168.178.240`
+- CoreDNS: `192.168.178.241`
+- The HTTPS listener uses `passer-lan-tls` (SANs `passer.lan`, `*.passer.lan`).
+- Trust `secrets/passer-lan.crt` on every daily-use client machine.
+- If a host stops resolving, check the HTTPRoute first, then the chart
+  values, then `external-dns` logs. See
+  [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for concrete symptoms.
+
+## Quick smoke test
 
 ```bash
-nslookup immich.passer.lan
-nslookup immich.passer.lan 192.168.178.241
-curl -I https://immich.passer.lan
-curl -I https://nextcloud.passer.lan
+for h in passer.lan nextcloud.passer.lan immich.passer.lan jellyfin.passer.lan \
+         paperless.passer.lan vaultwarden.passer.lan auth.passer.lan \
+         longhorn.passer.lan podinfo.passer.lan finance.passer.lan; do
+  printf '%-32s ' "$h"
+  curl -skI --resolve $h:443:192.168.178.240 https://$h/ --max-time 5 | head -1
+done
 ```
 
-If a service stops resolving, check the corresponding `HTTPRoute` first, then the app values, then `ExternalDNS`.
+Expect `HTTP/2 200`, `HTTP/2 302` (redirect to a login), or `HTTP/2 404`
+where the app hasn't finished bootstrapping yet — but never a
+connection error.

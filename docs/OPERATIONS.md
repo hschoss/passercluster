@@ -55,14 +55,16 @@ talosctl -n 192.168.178.201 reboot                   # kexec reboot, ~60 s
 
 | App | URL | Ready when |
 |---|---|---|
+| Landing page | https://passer.lan | pod `passer-home` 1/1 |
 | Nextcloud | https://nextcloud.passer.lan | pods `nextcloud`, `nextcloud-mariadb-0` are 1/1 |
 | Immich | https://immich.passer.lan | pods `immich-server`, `immich-postgres-1`, `immich-valkey`, `immich-machine-learning` all 1/1 |
 | Jellyfin | https://jellyfin.passer.lan | pod `jellyfin` 1/1 |
 | Paperless | https://paperless.passer.lan | pod `paperless-ngx` 1/1 |
 | Vaultwarden | https://vaultwarden.passer.lan | pod `vaultwarden` 1/1 |
-| Authentik | https://auth.passer.lan | server + worker 1/1 (may take ~5 min first boot) |
+| Authentik | https://auth.passer.lan (or https://authentik.passer.lan) | server + worker 1/1 (may take ~5 min first boot) |
 | Longhorn | https://longhorn.passer.lan | any longhorn-ui pod 1/1 |
 | Podinfo | https://podinfo.passer.lan | any podinfo pod 1/1 |
+| Findash | https://finance.passer.lan | pod `finance-placeholder` 1/1 today; `findash` after image flip (see `FINDASH-DEPLOY.md`) |
 
 Quick check from any LAN machine:
 
@@ -80,9 +82,11 @@ done
 
 ## Storage (Longhorn)
 
-- Storage classes are per-node: `longhorn-nvme-201`, `longhorn-nvme-202`, `longhorn-capacity-203`. They pin data to a specific worker via `nodeSelector` + `diskSelector` tags.
+- Storage classes are per-node: `longhorn-nvme-201` (talos-m2p-286), `longhorn-nvme-202` (talos-7tm-1kh), and per-workload tiers like `longhorn-nextcloud-fast`, `longhorn-immich-fast`, `longhorn-jellyfin`. Full list: `infrastructure/configs/longhorn-storage-classes.yaml`.
+- They pin data to a specific worker via `nodeSelector` + `diskSelector` tags declared in `infrastructure/configs/longhorn-node-labels.yaml`.
 - After a worker reboot, watch `kubectl -n longhorn-system get volumes` until every attached volume is `healthy` again.
 - Dashboard: `kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80` or `https://longhorn.passer.lan`.
+- Compact health helper: `scripts/longhorn-health-check.sh`.
 
 ## Backups (Velero)
 

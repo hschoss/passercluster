@@ -21,20 +21,23 @@ Home Kubernetes cluster on 4 Talos nodes, managed with Flux from this repo.
 - `auth.passer.lan` / `authentik.passer.lan` – Authentik SSO (see `docs/AUTHENTIK-SSO.md`)
 - `longhorn.passer.lan` – storage dashboard
 - `podinfo.passer.lan` – smoke-test app
+- `finance.passer.lan` – long-term stock dashboard (Findash, first version placeholder — see `docs/FINDASH-DEPLOY.md`)
+- `passer.lan` – minimal landing page linking everything, plus the docs at `/docs/`
 
 DNS: Pi-hole forwards `*.passer.lan` to CoreDNS at `192.168.178.241`. Gateway IP: `192.168.178.240`.
 
 ## Getting started as an operator
 
-1. **Talk to the cluster** – kubeconfig and talosconfig live in `talos/`.
+1. **Read [`CLAUDE.md`](CLAUDE.md)** – the full project brief: layout, conventions, failure modes, quirks.
+2. **Talk to the cluster** – kubeconfig and talosconfig live in `talos/`.
    ```bash
    export KUBECONFIG=$PWD/talos/kubeconfig
    export TALOSCONFIG=$PWD/talos/talosconfig
    kubectl get nodes
    ```
-2. **Check the health board** – `docs/OPERATIONS.md`.
-3. **Something is broken** – `docs/TROUBLESHOOTING.md`.
-4. **Change something** – edit files under `apps/` or `infrastructure/`, commit + push, Flux does the rest.
+3. **Check the health board** – [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
+4. **Something is broken** – [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
+5. **Change something** – edit files under `apps/` or `infrastructure/`, commit + push, Flux does the rest. To add a whole new app: [`docs/ADDING-APPS.md`](docs/ADDING-APPS.md).
 
 ## Layout
 
