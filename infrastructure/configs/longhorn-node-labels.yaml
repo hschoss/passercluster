@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Node
 metadata:
-  name: talos-ja7-1cq
+  name: talos-krw-er8
   labels:
     storage.passercluster.io/longhorn: disabled
     storage.passercluster.io/node-id: "200"
@@ -48,7 +48,7 @@ metadata:
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: talos-ja7-1cq
+  name: talos-krw-er8
   namespace: longhorn-system
   labels:
     app.kubernetes.io/name: longhorn
