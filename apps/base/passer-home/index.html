@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>passer.lan</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:"Times New Roman",Georgia,serif;max-width:44em;margin:2em auto;padding:0 1em;line-height:1.5;color:#111;background:#fff}
+h1{font-size:1.4em;margin:0 0 .2em 0}
+h2{font-size:1em;text-transform:uppercase;letter-spacing:.05em;margin:2em 0 .4em 0;border-bottom:1px solid #ccc;padding-bottom:.2em}
+ul{padding-left:1.2em;margin:.4em 0}
+li{margin:.15em 0}
+a{color:#0000ee;text-decoration:underline}
+a:visited{color:#551a8b}
+code{font-family:Menlo,Consolas,monospace;font-size:.9em;background:#f4f4f4;padding:0 .2em;border-radius:2px}
+hr{border:0;border-top:1px solid #ccc;margin:2.5em 0 1em 0}
+small{color:#555}
+p{margin:.5em 0}
+</style>
+</head>
+<body>
+
+<h1>passer.lan</h1>
+<p><small>Homelab Kubernetes cluster. Four Talos nodes, managed with Flux from
+<a href="https://github.com/hschoss/passercluster">github.com/hschoss/passercluster</a>.
+Gateway IP <code>192.168.178.240</code>.</small></p>
+
+<h2>Services</h2>
+<ul>
+<li><a href="https://nextcloud.passer.lan/">nextcloud.passer.lan</a> &mdash; file sync, calendar, contacts</li>
+<li><a href="https://immich.passer.lan/">immich.passer.lan</a> &mdash; photo library</li>
+<li><a href="https://jellyfin.passer.lan/">jellyfin.passer.lan</a> &mdash; media streaming</li>
+<li><a href="https://paperless.passer.lan/">paperless.passer.lan</a> &mdash; document archive</li>
+<li><a href="https://vaultwarden.passer.lan/">vaultwarden.passer.lan</a> &mdash; password manager</li>
+<li><a href="https://auth.passer.lan/">auth.passer.lan</a> &nbsp;/&nbsp; <a href="https://authentik.passer.lan/">authentik.passer.lan</a> &mdash; single sign-on</li>
+<li><a href="https://longhorn.passer.lan/">longhorn.passer.lan</a> &mdash; storage dashboard</li>
+<li><a href="https://podinfo.passer.lan/">podinfo.passer.lan</a> &mdash; smoke-test app</li>
+</ul>
+
+<h2>Documentation</h2>
+<ul>
+<li><a href="/docs/README.md">README</a> &mdash; docs index</li>
+<li><a href="/docs/OPERATIONS.md">OPERATIONS</a> &mdash; day-to-day operator runbook</li>
+<li><a href="/docs/TROUBLESHOOTING.md">TROUBLESHOOTING</a> &mdash; when something is on fire</li>
+<li><a href="/docs/CLUSTER-SETUP.md">CLUSTER-SETUP</a> &mdash; how the Talos cluster is built</li>
+<li><a href="/docs/CONTROL-PLANE-FIX.md">CONTROL-PLANE-FIX</a> &mdash; recovery notes for the control plane</li>
+<li><a href="/docs/INGRESS.md">INGRESS</a> &mdash; Envoy Gateway / MetalLB routing</li>
+<li><a href="/docs/AUTHENTIK.md">AUTHENTIK</a> &mdash; identity provider bootstrap</li>
+<li><a href="/docs/AUTHENTIK-SSO.md">AUTHENTIK-SSO</a> &mdash; per-app SSO wiring</li>
+<li><a href="/docs/COMMANDS.md">COMMANDS</a> &mdash; useful one-liners</li>
+<li><a href="/docs/SERVICES.md">SERVICES</a> &mdash; service catalogue</li>
+<li><a href="/docs/VELERO-SETUP.md">VELERO-SETUP</a> &mdash; backup platform</li>
+<li><a href="/docs/velero-backups.md">velero-backups</a> &mdash; backup schedule and restore</li>
+</ul>
+<p><small><a href="/docs/">browse /docs/</a> for the full directory listing.</small></p>
+
+<hr>
+<p><small>Served by nginx from a ConfigMap on the cluster it describes. No JavaScript, no analytics, no cookies.</small></p>
+
+</body>
+</html>

@@ -8,6 +8,7 @@ resources:
   - ../base/immich
   - ../base/paperless-ngx
   - ../base/authentik
+  - ../base/passer-home
 patches:
   - path: podinfo-values.yaml
     target:

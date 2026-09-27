@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: passer-home
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+configMapGenerator:
+  - name: passer-home-nginx
+    files:
+      - default.conf=nginx.conf
+  - name: passer-home-www
+    files:
+      - index.html
+  - name: passer-home-docs
+    files:
+      - ../../../docs/AUTHENTIK.md
+      - ../../../docs/AUTHENTIK-SSO.md
+      - ../../../docs/CLUSTER-SETUP.md
+      - ../../../docs/COMMANDS.md
+      - ../../../docs/CONTROL-PLANE-FIX.md
+      - ../../../docs/INGRESS.md
+      - ../../../docs/OPERATIONS.md
+      - ../../../docs/README.md
+      - ../../../docs/SERVICES.md
+      - ../../../docs/TROUBLESHOOTING.md
+      - ../../../docs/velero-backups.md
+      - ../../../docs/VELERO-SETUP.md
+generatorOptions:
+  disableNameSuffixHash: false
