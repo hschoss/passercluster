@@ -26,3 +26,21 @@ spec:
         secretName: authentik-credentials
     postgresql:
       enabled: false
+    server:
+      additionalVolumes:
+        - name: custom-blueprints
+          secret:
+            secretName: authentik-blueprints
+      additionalVolumeMounts:
+        - name: custom-blueprints
+          mountPath: /blueprints/custom
+          readOnly: true
+    worker:
+      additionalVolumes:
+        - name: custom-blueprints
+          secret:
+            secretName: authentik-blueprints
+      additionalVolumeMounts:
+        - name: custom-blueprints
+          mountPath: /blueprints/custom
+          readOnly: true

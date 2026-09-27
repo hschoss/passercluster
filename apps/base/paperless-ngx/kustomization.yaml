@@ -6,4 +6,5 @@ resources:
   - repository.yaml
   - release.yaml
   - paperless-ngx.secret.yaml
+  - paperless-oidc.secret.yaml
   - httproute.yaml

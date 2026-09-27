@@ -24,6 +24,9 @@ spec:
       PAPERLESS_TIME_ZONE: Europe/Berlin
       PAPERLESS_OCR_LANGUAGE: deu+eng
       PAPERLESS_URL: https://paperless.passer.lan
+      PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+      PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
+      PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: "false"
     persistence:
       data:
         enabled: true
@@ -66,3 +69,7 @@ spec:
       name: paperless-ngx-secret
       valuesKey: PAPERLESS_SECRET_KEY
       targetPath: env.PAPERLESS_SECRET_KEY
+    - kind: Secret
+      name: paperless-oidc
+      valuesKey: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+      targetPath: env.PAPERLESS_SOCIALACCOUNT_PROVIDERS

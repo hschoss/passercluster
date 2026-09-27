@@ -11,6 +11,7 @@ spec:
           enabled: true
           hostnames:
             - auth.passer.lan
+            - authentik.passer.lan
           parentRefs:
             - name: envoy
               namespace: envoy-gateway-system

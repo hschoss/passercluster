@@ -8,3 +8,5 @@ resources:
   - httproute.yaml
   - nextcloud-credentials.secret.yaml
   - nextcloud-db.secret.yaml
+  - nextcloud-oidc.secret.yaml
+  - nextcloud-oidc-bootstrap.job.yaml

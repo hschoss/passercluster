@@ -6,5 +6,6 @@ resources:
   - repository.yaml
   - authentik-credentials.secret.yaml
   - authentik-db.secret.yaml
+  - authentik-blueprints.secret.yaml
   - postgres.yaml
   - release.yaml

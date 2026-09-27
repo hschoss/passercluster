@@ -5,6 +5,7 @@ resources:
   - oci-repository.yaml
   - pvc.yaml
   - immich-db.secret.yaml
+  - immich-oidc.secret.yaml
   - postgres.yaml
   - release.yaml
   - httproute.yaml

@@ -18,7 +18,7 @@ Home Kubernetes cluster on 4 Talos nodes, managed with Flux from this repo.
 - `jellyfin.passer.lan` – media streaming
 - `paperless.passer.lan` – document archive
 - `vaultwarden.passer.lan` – password manager
-- `auth.passer.lan` – Authentik SSO
+- `auth.passer.lan` / `authentik.passer.lan` – Authentik SSO (see `docs/AUTHENTIK-SSO.md`)
 - `longhorn.passer.lan` – storage dashboard
 - `podinfo.passer.lan` – smoke-test app
 
