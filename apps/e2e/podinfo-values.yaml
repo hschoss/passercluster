@@ -5,6 +5,12 @@ metadata:
   namespace: podinfo
 spec:
   values:
+    # Disable the redis subchart in e2e. The workflow only smoke-tests
+    # podinfo's `/` endpoint, which does not require redis, and pulling
+    # public.ecr.aws/docker/library/redis from GitHub Actions runners
+    # regularly hits HTTP 429 rate limits and fails the run.
+    redis:
+      enabled: false
     httpRoute:
       hostnames:
         - podinfo-e2e.passer.lan
