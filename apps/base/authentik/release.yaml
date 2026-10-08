@@ -31,16 +31,30 @@ spec:
         - name: custom-blueprints
           secret:
             secretName: authentik-blueprints
+        - name: webauthn-policy
+          configMap:
+            name: authentik-webauthn-policy
       additionalVolumeMounts:
         - name: custom-blueprints
           mountPath: /blueprints/custom
+          readOnly: true
+        - name: webauthn-policy
+          mountPath: /blueprints/custom/passercluster-webauthn-policy.yaml
+          subPath: passercluster-webauthn-policy.yaml
           readOnly: true
     worker:
       additionalVolumes:
         - name: custom-blueprints
           secret:
             secretName: authentik-blueprints
+        - name: webauthn-policy
+          configMap:
+            name: authentik-webauthn-policy
       additionalVolumeMounts:
         - name: custom-blueprints
           mountPath: /blueprints/custom
+          readOnly: true
+        - name: webauthn-policy
+          mountPath: /blueprints/custom/passercluster-webauthn-policy.yaml
+          subPath: passercluster-webauthn-policy.yaml
           readOnly: true

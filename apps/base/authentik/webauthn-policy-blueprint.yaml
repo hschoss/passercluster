@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-webauthn-policy
+  namespace: authentik
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/component: blueprint
+data:
+  passercluster-webauthn-policy.yaml: |
+    version: 1
+    metadata:
+      name: passercluster-webauthn-policy
+      labels:
+        blueprints.goauthentik.io/instantiate: "true"
+    entries:
+      # Groups: Alle Benutzer werden einer dieser Gruppen zugewiesen.
+      - model: authentik_core.group
+        identifiers:
+          name: admins
+        attrs:
+          is_superuser: true
+      - model: authentik_core.group
+        identifiers:
+          name: users
+        attrs:
+          is_superuser: false
+      - model: authentik_core.group
+        identifiers:
+          name: family
+        attrs:
+          is_superuser: false
+
+      # WebAuthn-Enrollment-Stage: non-resident, cross-platform (YubiKey).
+      # Wird vom Authenticator-Validate-Stage als Konfigurations-Flow
+      # eingehängt, sodass Nutzer ohne Device durch dieses Enrollment
+      # geleitet werden.
+      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+        id: webauthn-enroll
+        identifiers:
+          name: passercluster-webauthn-enroll
+        attrs:
+          friendly_name: WebAuthn (passercluster)
+          user_verification: preferred
+          resident_key_requirement: discouraged
+          authenticator_attachment: cross-platform
+
+      # Policy: Der Nutzer muss mindestens zwei WebAuthn-Devices
+      # registriert haben, damit er den Enrollment-Flow verlassen darf.
+      # Wird im UI an das Flow- oder Stage-Binding gehängt.
+      - model: authentik_policies_expression.expressionpolicy
+        id: policy-two-webauthn-devices
+        identifiers:
+          name: passercluster-require-two-webauthn
+        attrs:
+          expression: |
+            from authentik.stages.authenticator_webauthn.models import WebAuthnDevice
+            count = WebAuthnDevice.objects.filter(user=request.user, confirmed=True).count()
+            return count >= 2
