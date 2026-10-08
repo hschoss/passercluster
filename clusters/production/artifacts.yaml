@@ -22,3 +22,7 @@ spec:
           to: "@artifact/base/"
         - from: "@monorepo/apps/production/**"
           to: "@artifact/production/"
+        - from: "@monorepo/CLAUDE.md"
+          to: "@artifact/CLAUDE.md"
+        - from: "@monorepo/docs/**"
+          to: "@artifact/docs/"

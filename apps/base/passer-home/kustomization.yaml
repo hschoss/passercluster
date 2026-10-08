@@ -15,20 +15,20 @@ configMapGenerator:
       - index.html
   - name: passer-home-docs
     files:
-      - CLAUDE.md=../../../CLAUDE.md
-      - ../../../docs/ADDING-APPS.md
-      - ../../../docs/AUTHENTIK.md
-      - ../../../docs/AUTHENTIK-SSO.md
-      - ../../../docs/CLUSTER-SETUP.md
-      - ../../../docs/COMMANDS.md
-      - ../../../docs/CONTROL-PLANE-FIX.md
-      - ../../../docs/FINDASH-DEPLOY.md
-      - ../../../docs/INGRESS.md
-      - ../../../docs/OPERATIONS.md
-      - ../../../docs/README.md
-      - ../../../docs/SERVICES.md
-      - ../../../docs/TROUBLESHOOTING.md
-      - ../../../docs/velero-backups.md
-      - ../../../docs/VELERO-SETUP.md
+      - CLAUDE.md=../../CLAUDE.md
+      - ../../docs/ADDING-APPS.md
+      - ../../docs/AUTHENTIK.md
+      - ../../docs/AUTHENTIK-SSO.md
+      - ../../docs/CLUSTER-SETUP.md
+      - ../../docs/COMMANDS.md
+      - ../../docs/CONTROL-PLANE-FIX.md
+      - ../../docs/FINDASH-DEPLOY.md
+      - ../../docs/INGRESS.md
+      - ../../docs/OPERATIONS.md
+      - ../../docs/README.md
+      - ../../docs/SERVICES.md
+      - ../../docs/TROUBLESHOOTING.md
+      - ../../docs/velero-backups.md
+      - ../../docs/VELERO-SETUP.md
 generatorOptions:
   disableNameSuffixHash: false
