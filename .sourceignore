@@ -8,3 +8,7 @@
 !/apps/
 !/clusters/
 !/infrastructure/
+
+# Include docs that passer-home mounts as its docs browser.
+!/CLAUDE.md
+!/docs/
