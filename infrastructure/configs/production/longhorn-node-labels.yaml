@@ -9,18 +9,6 @@ metadata:
     storage.passercluster.io/node-id: "200"
     node.longhorn.io/create-default-disk: "false"
 ---
-# Node 201: performance secondary NVMe tier.
-apiVersion: v1
-kind: Node
-metadata:
-  name: talos-m2p-286
-  labels:
-    storage-tier: performance-secondary
-    disk-type: nvme
-    storage.passercluster.io/longhorn: enabled
-    storage.passercluster.io/node-id: "201"
-    node.longhorn.io/create-default-disk: "false"
----
 # Node 202: performance primary NVMe tier.
 apiVersion: v1
 kind: Node
@@ -51,32 +39,6 @@ spec:
       evictionRequested: false
       storageReserved: 25362624921
       tags: []
----
-apiVersion: longhorn.io/v1beta2
-kind: Node
-metadata:
-  name: talos-m2p-286
-  namespace: longhorn-system
-  labels:
-    app.kubernetes.io/name: longhorn
-    app.kubernetes.io/part-of: storage
-spec:
-  allowScheduling: true
-  tags:
-    - performance
-    - performance-secondary
-    - nvme
-    - nvme-201
-  disks:
-    default-disk-1030400000000:
-      path: /var/lib/longhorn/
-      allowScheduling: true
-      evictionRequested: false
-      storageReserved: 99740687564
-      tags:
-        - nvme
-        - node-201
-        - nvme-201
 ---
 apiVersion: longhorn.io/v1beta2
 kind: Node

@@ -11,10 +11,10 @@ spec:
       - "vchord.so"
   affinity:
     nodeSelector:
-      kubernetes.io/hostname: talos-m2p-286
+      kubernetes.io/hostname: talos-7tm-1kh
   storage:
     size: 20Gi
-    storageClass: longhorn-nvme-201
+    storageClass: longhorn-nvme-202
   bootstrap:
     initdb:
       database: immich
