@@ -89,8 +89,6 @@ spec:
                   name: headscale-authkey
                   key: TS_AUTHKEY
                   optional: true
-            - name: TS_LOGIN_SERVER
-              value: https://vpn.schloschi.com
             - name: TS_HOSTNAME
               value: findash
             - name: TS_STATE_DIR
@@ -102,7 +100,7 @@ spec:
             - name: TS_SERVE_CONFIG
               value: /etc/tailscale/serve.json
             - name: TS_EXTRA_ARGS
-              value: --accept-dns=false
+              value: --login-server=https://vpn.schloschi.com --accept-dns=false
           resources:
             requests: { cpu: 20m,  memory: 32Mi }
             limits:   { cpu: 200m, memory: 128Mi }
