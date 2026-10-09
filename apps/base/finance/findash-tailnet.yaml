@@ -74,6 +74,8 @@ spec:
               value: findash
             - name: TS_STATE_DIR
               value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
             - name: TS_USERSPACE
               value: "true"
             - name: TS_SERVE_CONFIG
