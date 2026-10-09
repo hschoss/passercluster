@@ -134,15 +134,20 @@ metadata:
   name: findash-tailnet-serve
   namespace: finance
 data:
+  # Serve plain HTTP on port 80 within the tailnet. The tailnet
+  # itself is WireGuard-encrypted end-to-end; HTTPS at this layer
+  # would need tailscale cert, which only works when the Headscale
+  # instance has HTTPS/MagicDNS enabled upstream. For a trusted
+  # tailnet audience, HTTP is sufficient and simpler.
   serve.json: |
     {
       "TCP": {
-        "443": {
-          "HTTPS": true
+        "80": {
+          "HTTPS": false
         }
       },
       "Web": {
-        "${TS_CERT_DOMAIN}:443": {
+        "${TS_CERT_DOMAIN}:80": {
           "Handlers": {
             "/": {
               "Proxy": "http://findash.finance.svc.cluster.local:5000"
