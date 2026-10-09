@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - placeholder-deployment.yaml
   - httproute.yaml
+  - findash-tailnet.yaml
   # When the Findash image is built and pushed:
   # 1. Uncomment the two resources below
   # 2. Drop `placeholder-deployment.yaml` above

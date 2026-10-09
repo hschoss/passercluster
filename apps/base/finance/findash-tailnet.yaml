@@ -1,0 +1,132 @@
+# Tailnet-side exposure for Findash via Headscale (vpn.schloschi.com).
+#
+# A single tailscale sidecar in userspace mode logs into the Headscale
+# control plane and serves the in-cluster Findash service as
+# `findash.tail.schloschi.com` to every node in the hannes user's
+# tailnet. No public DNS, no router port-forward, no public TLS cert
+# — the tailnet is the access boundary.
+#
+# Bootstrap: the `headscale-authkey` Secret is NOT part of GitOps
+# (preauth key = credential). Create it once with:
+#
+#   docker exec headscale headscale preauthkeys create \
+#     --user hannes --reusable --expiration 24h
+#   kubectl -n finance create secret generic headscale-authkey \
+#     --from-literal=TS_AUTHKEY=<the-key>
+#
+# After the first login the key is consumed; the state volume keeps
+# the session so pod restarts do not need a new key.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: findash-tailnet-state
+  namespace: finance
+  labels:
+    app.kubernetes.io/name: findash-tailnet
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: findash-tailnet
+  namespace: finance
+  labels:
+    app.kubernetes.io/name: findash-tailnet
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: findash-tailnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: findash-tailnet
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:v1.78.3
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: headscale-authkey
+                  key: TS_AUTHKEY
+                  optional: true
+            - name: TS_LOGIN_SERVER
+              value: https://vpn.schloschi.com
+            - name: TS_HOSTNAME
+              value: findash
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve.json
+            - name: TS_EXTRA_ARGS
+              value: --accept-dns=false
+          resources:
+            requests: { cpu: 20m,  memory: 32Mi }
+            limits:   { cpu: 200m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/tailscale
+            - name: serve-config
+              mountPath: /etc/tailscale
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: findash-tailnet-state
+        - name: serve-config
+          configMap:
+            name: findash-tailnet-serve
+        - name: tmp
+          emptyDir: {}
+---
+# tailscale serve config: terminate HTTPS inside the sidecar with
+# tailnet-issued cert, proxy to the in-cluster Findash service.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: findash-tailnet-serve
+  namespace: finance
+data:
+  serve.json: |
+    {
+      "TCP": {
+        "443": {
+          "HTTPS": true
+        }
+      },
+      "Web": {
+        "${TS_CERT_DOMAIN}:443": {
+          "Handlers": {
+            "/": {
+              "Proxy": "http://findash.finance.svc.cluster.local:5000"
+            }
+          }
+        }
+      }
+    }

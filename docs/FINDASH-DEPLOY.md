@@ -51,6 +51,85 @@ Commit, push. Flux applies. The Job runs `alembic upgrade head` and
 
 To roll back to the placeholder, revert the above three edits.
 
+## Zugriff vom Laptop über Headscale (aquila)
+
+Findash ist bewusst nicht via Envoy/`passer.lan` ins LAN exposed
+sondern über das Headscale-Tailnet auf aquila, als
+`findash.tail.schloschi.com`. Keine public DNS, keine Portfreigabe am
+Heim-Router. Zugang hat jedes Device, das im Tailnet des Users
+`hannes` eingeloggt ist (Laptop, iPhone, VPS-Node).
+
+### Einmalige Bootstrap-Schritte
+
+1. **Pre-Auth-Key am Headscale generieren** (auf aquila):
+   ```bash
+   ssh aquila
+   docker exec headscale headscale preauthkeys create \
+     --user hannes --reusable --expiration 24h
+   ```
+   Rückgabe-Hex-String merken.
+
+2. **Secret im Cluster anlegen** (nicht in Git, Pre-Auth-Key =
+   Credential; einmal verbraucht wird er durch das Pod-State-PVC
+   überflüssig):
+   ```bash
+   kubectl -n finance create secret generic headscale-authkey \
+     --from-literal=TS_AUTHKEY='<der-key>'
+   ```
+
+3. **Flux reconcile** stößt Deployment + PVC an:
+   ```bash
+   flux reconcile kustomization apps -n flux-system
+   # oder per kubectl annotate
+   ```
+
+4. **Headscale-Side Node registriert sich**: in ca. 30 s meldet sich
+   der neue Node `findash` im Headscale an:
+   ```bash
+   ssh aquila "docker exec headscale headscale nodes list"
+   ```
+   Sollte als zusätzliche Zeile `findash` (User `hannes`,
+   100.64.0.x) erscheinen.
+
+5. **MagicDNS prüfen** — vom Laptop:
+   ```bash
+   dig +short findash.tail.schloschi.com
+   # ergibt die 100.64.0.x
+   ```
+
+### Zugriff
+
+Mit aktivem Tailscale-Client:
+```
+https://findash.tail.schloschi.com
+```
+TLS-Zertifikat wird vom Tailnet (ACME via tailscale cert) ausgegeben
+und ist in Tailscale-Clients automatisch vertrauenswürdig. Erster
+Request kann 1-2 s dauern (Cert-Ausstellung).
+
+Solange der Findash-Service noch den Placeholder serviert, antwortet
+die Tailnet-URL mit dem Placeholder. Nach dem oben beschriebenen Flip
+zeigt sie das echte Dashboard.
+
+### Rollback / Entfernen
+
+```bash
+# aus dem Cluster
+kubectl -n finance delete deployment findash-tailnet
+kubectl -n finance delete pvc findash-tailnet-state
+kubectl -n finance delete secret headscale-authkey
+
+# aus Headscale den Node entsorgen
+ssh aquila "docker exec headscale headscale nodes delete -i <node-id>"
+```
+
+### Falls jemals doch public (ohne Tailscale-Client erreichbar)
+
+Caddy auf aquila kriegt einen zusätzlichen Block, der an die
+Tailnet-IP des Clusters-Nodes proxied. Siehe
+`REQUIREMENTS §6` und einen separaten Follow-up Commit — bisher
+nicht konfiguriert und nicht empfohlen für Findash.
+
 ## Source database
 
 The upstream price database (`SOURCE_DATABASE_URL` in `.env.example`)

@@ -257,8 +257,16 @@ App-Passwörter ist „nur, wenn OIDC über Browser nicht funktioniert".
 - TLS: ein selbstsigniertes Wildcard-Zertifikat
   (`passer-lan-tls`). LAN-Nutzer importieren die CA einmal in ihren
   Trust-Store, danach keine Browser-Warnungen mehr.
-- **Externer Zugriff ausschließlich über Tailscale.** Keine
-  Portfreigaben am Router, keine öffentlichen DNS-Einträge.
+- **Externer Zugriff über Tailscale / Headscale.** Das Tailnet
+  läuft selbst-gehostet auf dem VPS `aquila` (Headscale,
+  `vpn.schloschi.com`), nicht gegen tailscale.com. Base-Domain für
+  MagicDNS: `tail.schloschi.com`. Keine Portfreigaben am Heim-Router,
+  keine öffentlichen DNS-Einträge für Services.
+- **Findash** ist der erste Dienst, der *außerhalb des LAN*
+  erreichbar ist — nicht als öffentlicher Hostname, sondern als
+  Tailnet-Service `findash.tail.schloschi.com`. Siehe
+  `docs/FINDASH-DEPLOY.md`. Netzwerk-Zugriff selbst ist der
+  Zugangsschutz; Findash hat deshalb bewusst keine Auth-Schicht.
 - Admin-Flächen (Longhorn UI, Authentik-Admin) sind nicht separat
   vom LAN abgeschottet — die Zugriffskontrolle läuft über Authentik
   und die `admins`-Gruppe, nicht über Netzwerk-Topologie.
