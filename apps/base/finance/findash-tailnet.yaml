@@ -56,9 +56,28 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
+        fsGroupChangePolicy: Always
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        # tailscale wants to chmod 0700 /var/lib/tailscale on startup; that
+        # fails as uid=1000 when the mount comes up root-owned. Fix the
+        # ownership once as root in a tiny init so the main container
+        # (runAsNonRoot: true) can take over cleanly.
+        - name: state-chown
+          image: busybox:1.37
+          command: ["sh", "-c", "chown 1000:1000 /var/lib/tailscale && chmod 0700 /var/lib/tailscale"]
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+              add: [CHOWN, FOWNER]
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/tailscale
       containers:
         - name: tailscale
           image: ghcr.io/tailscale/tailscale:v1.78.3
