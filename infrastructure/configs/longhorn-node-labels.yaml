@@ -21,6 +21,18 @@ metadata:
     storage.passercluster.io/node-id: "202"
     node.longhorn.io/create-default-disk: "false"
 ---
+# Node 201 (passer-w-01): 1 TB NVMe. Install + Longhorn data share the disk.
+apiVersion: v1
+kind: Node
+metadata:
+  name: passer-w-01
+  labels:
+    storage-tier: performance
+    disk-type: nvme
+    storage.passercluster.io/longhorn: enabled
+    storage.passercluster.io/node-id: "201"
+    node.longhorn.io/create-default-disk: "false"
+---
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -74,3 +86,28 @@ spec:
         - ssd
         - node-202
         - sdb
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: passer-w-01
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: true
+  tags:
+    - performance
+    - nvme
+    - nvme-201
+  disks:
+    default-disk-nvme0n1:
+      path: /var/lib/longhorn/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 100000000000
+      tags:
+        - nvme
+        - node-201
+        - nvme-201

@@ -20,9 +20,18 @@ A single-cluster homelab, Talos + Flux, all state in this repo.
 | IP              | Hostname        | Role          | Longhorn tags               |
 |-----------------|-----------------|---------------|-----------------------------|
 | 192.168.178.200 | `talos-krw-er8` | control-plane | none (no data disks)        |
-| 192.168.178.201 | `talos-m2p-286` | worker        | `nvme`, `nvme-201`          |
+| 192.168.178.201 | `passer-w-01`   | worker        | `nvme`, `nvme-201`          |
 | 192.168.178.202 | `talos-7tm-1kh` | worker        | `nvme`, `nvme-202`, `ssd`   |
-| 192.168.178.203 | `talos-8bp-pih` | worker        | `capacity`, `backup`, `hdd`, `media` |
+| 192.168.178.203 | `passer-w-03`   | worker        | `capacity`, `backup`, `hdd`, `media` |
+
+> **Hostname migration in progress.** The planned scheme (per
+> `homelab-docs/passer/`) is `passer-cp-01` / `passer-w-01…03`. Only
+> workers that are reinstalled receive the new name today; `.200` and
+> `.202` are still on the Talos-generated `talos-krw-er8` / `talos-7tm-1kh`
+> and will rename on their next reinstall. The 201/203 reinstall
+> (October 2026) used `talosctl gen secrets --from-controlplane-config`
+> plus a strategic patch to pin hostname + install disk; see
+> `scripts/talos-worker-config.sh` once that is scripted.
 
 **Reserved IPs on the LAN:**
 
