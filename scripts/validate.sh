@@ -27,6 +27,11 @@ kubeconform_config=("-strict" "-ignore-missing-schemas" "-schema-location" "defa
 # root directory to validate
 root_dir="."
 
+# staging dir mirroring the ArtifactGenerator composition
+# (see clusters/production/artifacts.yaml) so overlays under apps/ validate
+# against the exact tree Flux reconciles, not the raw repo layout.
+stage_root=""
+
 # directories to exclude from validation
 exclude_dirs=()
 
@@ -97,6 +102,39 @@ download_schemas() {
   mkdir -p /tmp/flux-crd-schemas/master-standalone-strict
   curl -sL https://github.com/controlplaneio-fluxcd/flux-operator/releases/latest/download/crd-schemas.tar.gz | tar zxf - -C /tmp/flux-crd-schemas/master-standalone-strict
   curl -sL https://github.com/fluxcd/flux2/releases/latest/download/crd-schemas.tar.gz | tar zxf - -C /tmp/flux-crd-schemas/master-standalone-strict
+}
+
+# Mirror the apps ArtifactGenerator (clusters/production/artifacts.yaml):
+# raw   apps/base/<app>/kustomization.yaml  references   ../../CLAUDE.md
+# flux  base/<app>/kustomization.yaml       (two levels up to CLAUDE.md, docs/)
+# We rebuild the artifact-side layout here under a tempdir so overlays
+# like apps/base/passer-home that reach into CLAUDE.md / docs/ resolve.
+stage_artifact_tree() {
+  echo "INFO - Staging artifact tree (mirrors ArtifactGenerator in clusters/production/artifacts.yaml)"
+  stage_root="$(mktemp -d -t passercluster-stage.XXXXXX)"
+  trap 'rm -rf "$stage_root"' EXIT
+
+  mkdir -p "$stage_root/apps"
+  for sub in base production staging e2e; do
+    if [[ -d "$root_dir/apps/$sub" ]]; then
+      cp -R "$root_dir/apps/$sub" "$stage_root/apps/$sub"
+    fi
+  done
+  cp    "$root_dir/CLAUDE.md" "$stage_root/apps/CLAUDE.md"
+  cp -R "$root_dir/docs"      "$stage_root/apps/docs"
+}
+
+# Rewrite an overlay path into its staged equivalent when it lives under
+# apps/ (the only subtree the ArtifactGenerator rebases in a way that
+# affects relative paths). Everything else validates in place.
+stage_overlay_path() {
+  local overlay norm
+  overlay="${1%/}"
+  norm="$(normalize_path "$overlay")"
+  case "$norm" in
+    apps|apps/*) echo "$stage_root/$norm" ;;
+    *)           echo "$overlay" ;;
+  esac
 }
 
 # Normalize a path by stripping leading "./" for consistent comparisons
@@ -192,8 +230,10 @@ validate_kustomize_overlays() {
     if is_non_kustomize_excluded_dir "$dir"; then
       continue
     fi
-    echo "INFO - Validating kustomize overlay ${file/%$kustomize_config}"
-    kustomize build "${file/%$kustomize_config}" "${kustomize_flags[@]}" | \
+    overlay="${file/%$kustomize_config}"
+    build_dir="$(stage_overlay_path "$overlay")"
+    echo "INFO - Validating kustomize overlay ${overlay}"
+    kustomize build "$build_dir" "${kustomize_flags[@]}" | \
       kubeconform "${kubeconform_flags[@]}" "${kubeconform_config[@]}"
     if [[ ${PIPESTATUS[0]} != 0 || ${PIPESTATUS[1]} != 0 ]]; then
       exit 1
@@ -205,6 +245,7 @@ validate_kustomize_overlays() {
 parse_args "$@"
 check_prerequisites
 download_schemas
+stage_artifact_tree
 detect_excluded_dirs
 validate_yaml_syntax
 validate_kubernetes_manifests
