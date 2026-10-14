@@ -33,6 +33,21 @@ metadata:
     storage.passercluster.io/node-id: "201"
     node.longhorn.io/create-default-disk: "false"
 ---
+# Node 203 (passer-w-03): 2x4TB Seagate HDD (sda, sdb), 1x500GB WDC HDD (sdc),
+# 1x250GB Samsung 860 SSD (sdd, holds Talos install). Longhorn uses only the
+# ephemeral partition on the SSD today; sda/sdb/sdc need Talos UserVolume
+# configs before Longhorn can mount them as data disks.
+apiVersion: v1
+kind: Node
+metadata:
+  name: passer-w-03
+  labels:
+    storage-tier: capacity
+    disk-type: hdd
+    storage.passercluster.io/longhorn: enabled
+    storage.passercluster.io/node-id: "203"
+    node.longhorn.io/create-default-disk: "false"
+---
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -111,3 +126,28 @@ spec:
         - nvme
         - node-201
         - nvme-201
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: passer-w-03
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/part-of: storage
+spec:
+  allowScheduling: true
+  tags:
+    - capacity
+    - backup
+    - hdd
+    - media
+  disks:
+    default-disk-sdd:
+      path: /var/lib/longhorn/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 50000000000
+      tags:
+        - ssd
+        - node-203
