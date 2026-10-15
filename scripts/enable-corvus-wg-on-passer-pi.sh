@@ -39,11 +39,15 @@ echo "[1/7] apt install ..."
 DEBIAN_FRONTEND=noninteractive apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard wireguard-tools iptables-persistent
 
-echo "[2/7] narrow AllowedIPs to corvus subnets ..."
+echo "[2/7] narrow AllowedIPs to corvus subnets and drop DNS lines ..."
 # Replace the AllowedIPs line to drop 0.0.0.0/0 and ::/0, keep only corvus.
+# Strip DNS lines: wg-quick(8) would invoke resolvconf, which is not
+# installed on the Pi (and the Pi uses its own DNS, so it does not need the
+# corvus DNS from the FritzBox).
 tmp="$(mktemp)"
 awk -v v4="$CORVUS_V4" -v v6="$CORVUS_V6" '
   /^AllowedIPs[[:space:]]*=/ { print "AllowedIPs = " v4 "," v6; next }
+  /^DNS[[:space:]]*=/        { next }
   { print }
 ' "$SRC_CONF" > "$tmp"
 
