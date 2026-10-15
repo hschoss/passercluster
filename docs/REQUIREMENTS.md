@@ -257,19 +257,38 @@ App-Passwörter ist „nur, wenn OIDC über Browser nicht funktioniert".
 - TLS: ein selbstsigniertes Wildcard-Zertifikat
   (`passer-lan-tls`). LAN-Nutzer importieren die CA einmal in ihren
   Trust-Store, danach keine Browser-Warnungen mehr.
-- **Externer Zugriff über Tailscale / Headscale.** Das Tailnet
-  läuft selbst-gehostet auf dem VPS `aquila` (Headscale,
-  `vpn.schloschi.com`), nicht gegen tailscale.com. Base-Domain für
-  MagicDNS: `tail.schloschi.com`. Keine Portfreigaben am Heim-Router,
-  keine öffentlichen DNS-Einträge für Services.
-- **Findash** ist der erste Dienst, der *außerhalb des LAN*
-  erreichbar ist — nicht als öffentlicher Hostname, sondern als
-  Tailnet-Service `findash.tail.schloschi.com`. Siehe
-  `docs/FINDASH-DEPLOY.md`. Netzwerk-Zugriff selbst ist der
-  Zugangsschutz; Findash hat deshalb bewusst keine Auth-Schicht.
+- **Externer Zugriff über Tailnet.** Keine Portfreigaben am
+  Heim-Router, keine öffentlichen DNS-Einträge für Services. Es
+  laufen heute zwei Tailnets parallel:
+  - **Tailscale.com** (`tail1566a8.ts.net`): die Device-Peers
+    (`schlaeptop`, `passer`, `iphone`). Hier wird seit 2026-10-15
+    das LAN-Subnet `192.168.178.0/24` über den Raspberry Pi `passer`
+    als Subnet-Router advertised; dazu Split-DNS `passer.lan →
+    192.168.178.241` im Tailscale-Admin-Panel. Dadurch sind alle
+    `*.passer.lan`-Hostnamen tailnet-weit erreichbar, mit demselben
+    `passer-lan-tls`-Wildcard-Zertifikat wie im LAN.
+  - **Headscale** auf dem VPS `aquila` (`vpn.schloschi.com`,
+    Base-Domain `tail.schloschi.com`): Nutzung heute nur durch den
+    `findash-tailnet`-Sidecar (siehe `apps/base/finance/findash-tailnet.yaml`
+    und `docs/FINDASH-DEPLOY.md`), der Findash als
+    `findash.tail.schloschi.com` serviert.
+- **Zielzustand:** dieselbe LAN-Exposition (Subnet-Route
+  `192.168.178.0/24` + Split-DNS für `*.passer.lan`) auf **Headscale**
+  nachbauen und die Tailscale.com-Konfiguration anschließend abbauen,
+  so dass nur noch *ein* Tailnet (das selbst-gehostete) existiert.
+  Konkrete Schritte, offen: Pi `passer` auf Headscale ummelden
+  (`tailscale up --login-server=https://vpn.schloschi.com --advertise-routes=192.168.178.0/24`),
+  Route in Headscale approven (`headscale routes enable -r <id>`),
+  Split-DNS in Headscale `config.yaml` eintragen
+  (`dns.nameservers.split: { "passer.lan": ["192.168.178.241"] }`,
+  `dns.magic_dns: true`), Clients (Laptop, iPhone) ebenfalls auf
+  Headscale ummelden mit `--accept-routes`. Zur Zeit der Umstellung
+  diese Doc nachführen.
 - Admin-Flächen (Longhorn UI, Authentik-Admin) sind nicht separat
-  vom LAN abgeschottet — die Zugriffskontrolle läuft über Authentik
-  und die `admins`-Gruppe, nicht über Netzwerk-Topologie.
+  vom Tailnet abgeschottet — mit der LAN-Exposition über Tailnet
+  sind sie damit auch außerhalb des LAN sichtbar. Die
+  Zugriffskontrolle läuft komplett über Authentik und die
+  `admins`-Gruppe, nicht über Netzwerk-Topologie.
 
 ---
 
