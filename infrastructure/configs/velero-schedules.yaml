@@ -1,19 +1,97 @@
+---
+# Daily backup: everything except jellyfin and cluster plumbing.
+# TTL 8d so that 7 daily backups coexist (today + 7 historical).
+# Berlin time via Velero's TZ cron prefix (v1.11+).
+#
+# Pre-backup hook: Immich CNPG primary writes pg_dumpall into the pgdata PVC
+# so the DB is captured as a logical, portable dump even if the on-disk files
+# are not frozen. Paperless-postgres has no PVC (ephemeral deployment), so
+# no DB hook here; backup covers the paperless-ngx namespace manifests and
+# the app PVCs only — fix the paperless chart to add postgresql.persistence
+# in a follow-up and then add a hook here.
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
-  name: daily-critical-apps
+  name: daily-apps
   namespace: velero
 spec:
-  schedule: "0 3 * * *"
+  schedule: "TZ=Europe/Berlin 0 10 * * *"
   template:
     includedNamespaces:
-      - nextcloud
+      - authentik
+      - cnpg-system
+      - finance
+      - homelab-dns
       - immich
+      - longhorn-system
+      - nextcloud
       - paperless-ngx
+      - passer-home
+      - podinfo
       - vaultwarden
-    excludedNamespaces:
-      - jellyfin
     storageLocation: default
-    ttl: 336h
+    ttl: 192h          # 8 days = 7 daily rolling
     snapshotVolumes: false
     defaultVolumesToFsBackup: true
+    hooks:
+      resources:
+        - name: immich-cnpg-dump
+          includedNamespaces:
+            - immich
+          labelSelector:
+            matchLabels:
+              cnpg.io/cluster: immich-postgres
+              cnpg.io/instanceRole: primary
+          pre:
+            - exec:
+                container: postgres
+                command:
+                  - /bin/sh
+                  - -c
+                  - "pg_dumpall -U postgres | gzip > /var/lib/postgresql/data/pre-backup-dump.sql.gz"
+                onError: Continue
+                timeout: 15m
+---
+# Weekly backup, Sundays 10:00 Europe/Berlin. TTL 29d → 4 weekly backups.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: weekly-apps
+  namespace: velero
+spec:
+  schedule: "TZ=Europe/Berlin 0 10 * * 0"
+  template:
+    includedNamespaces:
+      - authentik
+      - cnpg-system
+      - finance
+      - homelab-dns
+      - immich
+      - longhorn-system
+      - nextcloud
+      - paperless-ngx
+      - passer-home
+      - podinfo
+      - vaultwarden
+    storageLocation: default
+    ttl: 696h          # 29 days = 4 weekly rolling
+    snapshotVolumes: false
+    defaultVolumesToFsBackup: true
+    hooks:
+      resources:
+        - name: immich-cnpg-dump
+          includedNamespaces:
+            - immich
+          labelSelector:
+            matchLabels:
+              cnpg.io/cluster: immich-postgres
+              cnpg.io/instanceRole: primary
+          pre:
+            - exec:
+                container: postgres
+                command:
+                  - /bin/sh
+                  - -c
+                  - "pg_dumpall -U postgres | gzip > /var/lib/postgresql/data/pre-backup-dump.sql.gz"
+                onError: Continue
+                timeout: 15m
