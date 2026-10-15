@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../base/podinfo
   - ../base/nextcloud
+  - ../base/jellyfin
   - ../base/vaultwarden
   - ../base/immich
   - ../base/paperless-ngx
@@ -22,6 +23,14 @@ patches:
     target:
       kind: HTTPRoute
       name: nextcloud
+  - path: jellyfin-values.yaml
+    target:
+      kind: HelmRelease
+      name: jellyfin
+  - path: jellyfin-httproute.yaml
+    target:
+      kind: HTTPRoute
+      name: jellyfin
   - path: vaultwarden-values.yaml
     target:
       kind: HelmRelease

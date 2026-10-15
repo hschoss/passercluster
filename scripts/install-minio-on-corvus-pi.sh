@@ -37,11 +37,15 @@ need_root() {
 }
 need_root "$@"
 
+# Resolve the user's primary group dynamically — on this Pi the vault user
+# is not necessarily in a group of the same name.
+MINIO_GROUP="$(id -gn "$MINIO_USER")"
+
 echo "[1/6] zfs dataset tank/velero ..."
 if ! zfs list tank/velero >/dev/null 2>&1; then
   zfs create -o mountpoint="$MINIO_DATA" -o compression=lz4 -o atime=off tank/velero
 fi
-chown -R "$MINIO_USER":"$MINIO_USER" "$MINIO_DATA"
+chown -R "$MINIO_USER":"$MINIO_GROUP" "$MINIO_DATA"
 
 echo "[2/6] download minio server binary ..."
 # arm64 for Pi 5
@@ -57,17 +61,17 @@ fi
 echo "[3/6] credentials & /etc/default/minio ..."
 ACCESS_KEY="passer-velero"
 SECRET_KEY="$(openssl rand -base64 36 | tr -dc 'A-Za-z0-9' | head -c 40)"
-install -m 0640 -g "$MINIO_USER" /dev/null /etc/default/minio
+install -m 0640 -g "$MINIO_GROUP" /dev/null /etc/default/minio
 cat > /etc/default/minio <<EOF
 MINIO_ROOT_USER=$ACCESS_KEY
 MINIO_ROOT_PASSWORD=$SECRET_KEY
 MINIO_VOLUMES="$MINIO_DATA"
 MINIO_OPTS="--address $MINIO_LISTEN_ADDR --console-address $MINIO_CONSOLE_ADDR"
 EOF
-chown root:"$MINIO_USER" /etc/default/minio
+chown root:"$MINIO_GROUP" /etc/default/minio
 
 echo "[4/6] systemd unit ..."
-cat > /etc/systemd/system/minio.service <<'EOF'
+cat > /etc/systemd/system/minio.service <<EOF
 [Unit]
 Description=MinIO object storage server (Velero backup target for passer)
 After=network-online.target zfs-mount.service
@@ -75,9 +79,9 @@ Wants=network-online.target zfs-mount.service
 
 [Service]
 EnvironmentFile=/etc/default/minio
-User=vault
-Group=vault
-ExecStart=/usr/local/bin/minio server $MINIO_OPTS $MINIO_VOLUMES
+User=$MINIO_USER
+Group=$MINIO_GROUP
+ExecStart=/usr/local/bin/minio server \$MINIO_OPTS \$MINIO_VOLUMES
 Restart=always
 RestartSec=5s
 LimitNOFILE=65536

@@ -34,9 +34,10 @@ metadata:
     node.longhorn.io/create-default-disk: "false"
 ---
 # Node 203 (passer-w-03): 2x4TB Seagate HDD (sda, sdb), 1x500GB WDC HDD (sdc),
-# 1x250GB Samsung 860 SSD (sdd, holds Talos install). Longhorn uses only the
-# ephemeral partition on the SSD today; sda/sdb/sdc need Talos UserVolume
-# configs before Longhorn can mount them as data disks.
+# 1x250GB Samsung 860 SSD (sdd, holds Talos install). Talos UserVolumeConfig
+# (live on the node, see talos/user-volumes-passer-w-03.yaml) mounts sda1 at
+# /var/mnt/longhorn-sda and sdb1 at /var/mnt/longhorn-sdb; both are exposed to
+# Longhorn below with hdd/media tags. sdc is unused.
 apiVersion: v1
 kind: Node
 metadata:
@@ -150,4 +151,22 @@ spec:
       storageReserved: 50000000000
       tags:
         - ssd
+        - node-203
+    longhorn-sda:
+      path: /var/mnt/longhorn-sda
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 100000000000
+      tags:
+        - hdd
+        - media
+        - node-203
+    longhorn-sdb:
+      path: /var/mnt/longhorn-sdb
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 100000000000
+      tags:
+        - hdd
+        - media
         - node-203
