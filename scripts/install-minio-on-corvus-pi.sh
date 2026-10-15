@@ -48,13 +48,14 @@ fi
 chown -R "$MINIO_USER":"$MINIO_GROUP" "$MINIO_DATA"
 
 echo "[2/6] download minio server binary ..."
-# arm64 for Pi 5
+# arm64 for Pi 5. The `/server/` and `/client/` paths were deprecated in
+# 2026 (HTTP 410); the current public distribution lives under `/aistor/`.
 if ! command -v minio >/dev/null 2>&1; then
-  curl -fsSLo /usr/local/bin/minio https://dl.min.io/server/minio/release/linux-arm64/minio
+  curl -fsSLo /usr/local/bin/minio https://dl.min.io/aistor/minio/release/linux-arm64/minio
   chmod +x /usr/local/bin/minio
 fi
 if ! command -v mc >/dev/null 2>&1; then
-  curl -fsSLo /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-arm64/mc
+  curl -fsSLo /usr/local/bin/mc https://dl.min.io/aistor/mc/release/linux-arm64/mc
   chmod +x /usr/local/bin/mc
 fi
 
