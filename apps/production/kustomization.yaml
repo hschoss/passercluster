@@ -10,6 +10,8 @@ resources:
   - ../base/authentik
   - ../base/passer-home
   - ../base/finance
+  - ../base/power-controller
+  - ../base/folding
 patches:
   - path: podinfo-values.yaml
     target:
