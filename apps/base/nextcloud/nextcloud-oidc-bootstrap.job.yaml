@@ -87,7 +87,11 @@ spec:
               POD=$(kubectl -n nextcloud get pod -l app.kubernetes.io/name=nextcloud -o jsonpath='{.items[0].metadata.name}')
               echo "[bootstrap] using pod $POD"
 
-              occ() { kubectl -n nextcloud exec "$POD" -c nextcloud -- su -s /bin/sh www-data -c "php /var/www/html/occ $*"; }
+              occ() {
+                local cmd
+                cmd=$(printf ' %q' "$@")
+                kubectl -n nextcloud exec "$POD" -c nextcloud -- su -s /bin/sh www-data -c "php /var/www/html/occ$cmd"
+              }
 
               echo "[bootstrap] ensuring user_oidc app is installed"
               if ! occ app:list | grep -qi 'user_oidc'; then
