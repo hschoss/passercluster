@@ -41,7 +41,7 @@ metadata:
   name: nextcloud-oidc-bootstrap
   namespace: nextcloud
   annotations:
-    kustomize.toolkit.fluxcd.io/force: "true"
+    kustomize.toolkit.fluxcd.io/force: "enabled"
 spec:
   backoffLimit: 20
   ttlSecondsAfterFinished: 604800
