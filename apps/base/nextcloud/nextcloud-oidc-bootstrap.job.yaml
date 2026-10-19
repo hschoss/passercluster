@@ -54,7 +54,7 @@ spec:
       serviceAccountName: nextcloud-oidc-bootstrap
       containers:
         - name: bootstrap
-          image: bitnami/kubectl:1.31
+          image: bitnamilegacy/kubectl:1.31
           env:
             - name: OIDC_DISCOVERY_URL
               valueFrom:
