@@ -18,6 +18,19 @@ spec:
   upgrade:
     strategy:
       name: RetryOnFailure
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: podinfo
+            patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: podinfo
+                labels:
+                  power-tier: optional
   # Default values
   # https://github.com/stefanprodan/podinfo/blob/master/charts/podinfo/values.yaml
   values:

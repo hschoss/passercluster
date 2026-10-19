@@ -1,0 +1,71 @@
+---
+# Folding@home workload, team 1066966. Runs only when the sonnen power
+# controller moves the cluster into the BURN stage; replicas stays at 0
+# until then. The controller scales up by patching the `power-tier=surplus`
+# label selector; Flux does not fight it because the HR for this
+# Deployment is suspended on LOW_POWER / NORMAL by the controller too.
+#
+# The image yurinnick/folding-at-home is the most-used community image on
+# Docker Hub (Alpine-based, FAH_USER / FAH_TEAM / FAH_PASSKEY env). Swap
+# for `foldingathome/fah-image` once the official OCI image is tagged for
+# ARM/AMD64 Alpine; the official one presently ships Debian-only tags.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: folding
+  namespace: folding
+  labels:
+    app.kubernetes.io/name: folding
+    power-tier: surplus
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: folding
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: folding
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fah
+          image: yurinnick/folding-at-home:7.6.21
+          imagePullPolicy: IfNotPresent
+          args:
+            - --user=hschoss
+            - --team=1066966
+            - --power=full
+            - --gpu=false
+            - --smp=true
+          resources:
+            # Deliberately generous so that F@H fills surplus power; the
+            # controller only enables this when the battery is above the
+            # BURN threshold with sustained solar surplus.
+            requests:
+              cpu: "2"
+              memory: 1Gi
+            limits:
+              cpu: "6"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ALL]
+      # Prefer the beefier workers; the control plane is excluded by its
+      # NoSchedule taint already.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: [passer-w-03, talos-7tm-1kh]

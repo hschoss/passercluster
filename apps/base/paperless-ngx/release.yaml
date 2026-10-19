@@ -67,6 +67,8 @@ spec:
               kind: Deployment
               metadata:
                 name: paperless-ngx
+                labels:
+                  power-tier: optional
               spec:
                 template:
                   spec:

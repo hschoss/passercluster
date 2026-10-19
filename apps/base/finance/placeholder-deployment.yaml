@@ -5,6 +5,7 @@ metadata:
   namespace: finance
   labels:
     app.kubernetes.io/name: finance-placeholder
+    power-tier: optional
 spec:
   replicas: 1
   selector:
