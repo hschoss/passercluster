@@ -79,3 +79,19 @@ spec:
                               name: paperless-ngx-secret
                           - secretRef:
                               name: paperless-oidc
+                        env:
+                          - name: REQUESTS_CA_BUNDLE
+                            value: /certs/passer-lan.crt
+                          - name: SSL_CERT_FILE
+                            value: /certs/passer-lan.crt
+                        volumeMounts:
+                          - name: passer-lan-ca
+                            mountPath: /certs
+                            readOnly: true
+                    volumes:
+                      - name: passer-lan-ca
+                        secret:
+                          secretName: passer-lan-tls
+                          items:
+                            - key: tls.crt
+                              path: passer-lan.crt
