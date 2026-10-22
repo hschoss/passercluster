@@ -16,6 +16,19 @@ spec:
     remediation:
       strategy: rollback
       retries: 3
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: immich-server
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/volumeMounts/-
+                value:
+                  name: data
+                  mountPath: /import
+                  subPath: library-recovery
   values:
     controllers:
       main:
