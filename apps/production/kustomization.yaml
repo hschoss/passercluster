@@ -12,6 +12,7 @@ resources:
   - ../base/finance
   - ../base/power-controller
   - ../base/folding
+  - ../base/home-assistant
 patches:
   - path: podinfo-values.yaml
     target:
@@ -57,3 +58,7 @@ patches:
     target:
       kind: HelmRelease
       name: authentik
+  - path: home-assistant-values.yaml
+    target:
+      kind: HelmRelease
+      name: home-assistant
