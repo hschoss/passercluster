@@ -34,7 +34,8 @@ spec:
       storageClass: longhorn
       accessMode: ReadWriteOnce
     env:
-      TZ: Europe/Berlin
+      - name: TZ
+        value: Europe/Berlin
     configuration:
       enabled: true
       forceInit: false
