@@ -39,6 +39,11 @@ spec:
     configuration:
       enabled: true
       forceInit: true
+      # http config is managed via the UI (Settings > System > Network) and
+      # persisted in /config/.storage/http inside the Longhorn PVC. If the PVC
+      # is ever lost, re-add an http: block here with use_x_forwarded_for +
+      # trusted_proxies (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), let HA
+      # import it once, accept the Repair in the UI, then remove it again.
       templateConfig: |
         default_config:
         frontend:
@@ -46,9 +51,3 @@ spec:
         automation: !include automations.yaml
         script: !include scripts.yaml
         scene: !include scenes.yaml
-        http:
-          use_x_forwarded_for: true
-          trusted_proxies:
-            - 10.0.0.0/8
-            - 172.16.0.0/12
-            - 192.168.0.0/16
