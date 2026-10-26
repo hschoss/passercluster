@@ -32,13 +32,37 @@ spec:
         runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        # BOINC rewrites account_*.xml at runtime to persist the
+        # computer ID and other state, so the account file must live
+        # on a writable volume. Copy it from the Secret volume into
+        # the emptyDir before the main container starts.
+        - name: install-account
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /secret/account_einstein.phys.uwm.edu.xml /var/lib/boinc/
+              chmod 600 /var/lib/boinc/account_einstein.phys.uwm.edu.xml
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: boinc-data
+              mountPath: /var/lib/boinc
+            - name: einstein-account
+              mountPath: /secret
+              readOnly: true
       containers:
         - name: boinc
           image: boinc/client:latest
           imagePullPolicy: IfNotPresent
-          # No args — the client auto-attaches on first start by reading
-          # the account_einstein.phys.uwm.edu.xml file we drop in via
-          # the Secret volume mount.
+          # No args — the client auto-attaches on first start by
+          # finding the account_einstein.phys.uwm.edu.xml file at
+          # /var/lib/boinc/ (dropped there by the initContainer).
           resources:
             # Deliberately generous so BOINC fills surplus power when
             # the sonnen controller permits it.
@@ -56,10 +80,6 @@ spec:
           volumeMounts:
             - name: boinc-data
               mountPath: /var/lib/boinc
-            - name: einstein-account
-              mountPath: /var/lib/boinc/account_einstein.phys.uwm.edu.xml
-              subPath: account_einstein.phys.uwm.edu.xml
-              readOnly: true
       volumes:
         - name: boinc-data
           emptyDir: {}
