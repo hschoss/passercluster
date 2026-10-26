@@ -12,6 +12,14 @@ metadata:
 # during the Pi's MinIO install (see docs/VELERO-SETUP.md). The in-cluster
 # bucket-setup Job that previously ran against 192.168.178.2 is removed.
 #
+# Reachability: the cluster LAN (192.168.178.0/24) cannot route to the
+# corvus LAN (192.168.179.0/24) directly. The passer Pi (.178.2) accepts
+# the 192.168.179.0/24 subnet route from the `corvus-datahub` tailscale
+# subnet router, and runs a socat proxy container (`minio-proxy`) that
+# listens on 192.168.178.2:9000 and forwards to 192.168.179.2:9000. The
+# BSL therefore points at the passer-side endpoint; the data path transits
+# via the tailscale subnet route through corvus-datahub.
+#
 # Snapshot strategy: Kopia file-system backup (FSB) only.
 # CSI VolumeSnapshotClass CRDs are not installed cluster-wide yet; once the
 # external-snapshotter is deployed, flip EnableCSI + VolumeSnapshotLocation
@@ -70,8 +78,8 @@ spec:
           config:
             region: minio
             s3ForcePathStyle: "true"
-            s3Url: http://192.168.179.2:9000
-            publicUrl: http://192.168.179.2:9000
+            s3Url: http://192.168.178.2:9000
+            publicUrl: http://192.168.178.2:9000
     credentials:
       useSecret: true
       existingSecret: velero-credentials
