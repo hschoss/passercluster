@@ -21,6 +21,7 @@ spec:
       - authentik
       - cnpg-system
       - finance
+      - home-assistant
       - homelab-dns
       - immich
       - longhorn-system
@@ -65,6 +66,7 @@ spec:
       - authentik
       - cnpg-system
       - finance
+      - home-assistant
       - homelab-dns
       - immich
       - longhorn-system
