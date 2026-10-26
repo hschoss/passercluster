@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonnen-collector
+  namespace: sonnen
+  labels:
+    power-tier: critical
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonnen-collector
+  template:
+    metadata:
+      labels:
+        app: sonnen-collector
+        power-tier: critical
+    spec:
+      containers:
+        - name: collector
+          image: ghcr.io/hschoss/sonnen-homelab-power-controller:dc5d122
+          imagePullPolicy: IfNotPresent
+          command: ["python", "scripts/run_collector.py"]
+          envFrom:
+            - configMapRef:
+                name: sonnen-config
+            - secretRef:
+                name: sonnen-config-secret
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sonnen-postgres-app
+                  key: uri
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      # If the GHCR package is private, add `imagePullSecrets: [{name: ghcr-pull}]`
+      # here and create a dockerconfigjson Secret with a GitHub PAT (read:packages).

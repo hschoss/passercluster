@@ -1,0 +1,44 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sonnen-postgres
+  namespace: sonnen
+spec:
+  instances: 1
+  storage:
+    size: 2Gi
+    storageClass: longhorn-nvme-202
+  bootstrap:
+    initdb:
+      database: sonnen
+      owner: sonnen
+      secret:
+        name: sonnen-db
+      postInitApplicationSQL:
+        - CREATE SCHEMA IF NOT EXISTS sonnen;
+        - |
+          CREATE TABLE IF NOT EXISTS sonnen.status (
+            collected_at   timestamptz NOT NULL DEFAULT now(),
+            rsoc           int,
+            usoc           int,
+            production_w   int,
+            consumption_w  int,
+            grid_feed_in_w int,
+            pac_total_w    int,
+            battery_charging    boolean,
+            battery_discharging boolean,
+            operating_mode      text,
+            raw            jsonb
+          );
+        - CREATE INDEX IF NOT EXISTS status_collected_at_idx ON sonnen.status (collected_at DESC);
+        - |
+          CREATE TABLE IF NOT EXISTS sonnen.decisions (
+            decided_at   timestamptz NOT NULL DEFAULT now(),
+            old_stage    text,
+            new_stage    text NOT NULL,
+            reason       text,
+            rsoc         int,
+            surplus_w    numeric
+          );
+        - CREATE INDEX IF NOT EXISTS decisions_decided_at_idx ON sonnen.decisions (decided_at DESC);

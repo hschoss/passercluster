@@ -1,0 +1,27 @@
+---
+# Non-secret config for both collector and decision-engine.
+# SONNEN_BASE_URL points at the socat proxy on passer, which forwards
+# to the sonnenBatterie on 192.168.179.10. The .178.2 endpoint is on
+# the cluster LAN and is directly reachable from every worker.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sonnen-config
+  namespace: sonnen
+data:
+  SONNEN_BASE_URL: "http://192.168.178.2:8010"
+  POLL_INTERVAL_SECONDS: "15"
+  DECISION_INTERVAL_SECONDS: "60"
+  # Dry-run until we've seen the controller behave in the real cluster.
+  EXECUTE_ACTIONS: "false"
+  FOLDING_NAMESPACE: "folding"
+  FOLDING_DEPLOYMENT: "folding"
+  FOLDING_BURN_REPLICAS: "1"
+  SOC_SCALE_DOWN_THRESHOLD: "35"
+  SOC_LOW_RECOVERY: "40"
+  SOC_BURN_THRESHOLD: "70"
+  SOC_SCALE_UP_THRESHOLD: "65"
+  MIN_SURPLUS_W_FOR_BURN: "500"
+  SURPLUS_DROP_W: "200"
+  ACTION_COOLDOWN_MINUTES: "30"
+  LOG_LEVEL: "INFO"

@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonnen-decision-engine
+  namespace: sonnen
+  labels:
+    power-tier: critical
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonnen-decision-engine
+  template:
+    metadata:
+      labels:
+        app: sonnen-decision-engine
+        power-tier: critical
+    spec:
+      serviceAccountName: sonnen-controller
+      containers:
+        - name: decision-engine
+          image: ghcr.io/hschoss/sonnen-homelab-power-controller:dc5d122
+          imagePullPolicy: IfNotPresent
+          command: ["python", "scripts/run_decision_engine.py"]
+          envFrom:
+            - configMapRef:
+                name: sonnen-config
+            - secretRef:
+                name: sonnen-config-secret
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sonnen-postgres-app
+                  key: uri
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      # See collector.yaml for the imagePullSecrets note.

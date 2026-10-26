@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sonnen-controller
+  namespace: sonnen
+---
+# Decision-engine must be able to read + patch the `folding` Deployment's
+# scale subresource. Scoped to the folding namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sonnen-folding-scaler
+  namespace: folding
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["folding"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    resourceNames: ["folding"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sonnen-folding-scaler
+  namespace: folding
+subjects:
+  - kind: ServiceAccount
+    name: sonnen-controller
+    namespace: sonnen
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sonnen-folding-scaler
