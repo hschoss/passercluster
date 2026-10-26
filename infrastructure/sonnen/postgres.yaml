@@ -6,6 +6,9 @@ metadata:
   namespace: sonnen
 spec:
   instances: 1
+  affinity:
+    nodeSelector:
+      kubernetes.io/hostname: talos-7tm-1kh
   storage:
     size: 2Gi
     storageClass: longhorn-nvme-202
