@@ -4,3 +4,4 @@ namespace: folding
 resources:
   - namespace.yaml
   - deployment.yaml
+  - einstein-account.secret.yaml

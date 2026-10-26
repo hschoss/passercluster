@@ -1,14 +1,13 @@
 ---
-# Folding@home workload, team 1066966. Runs only when the sonnen power
-# controller moves the cluster into the BURN stage; replicas stays at 0
-# until then. The controller scales up by patching the `power-tier=surplus`
-# label selector; Flux does not fight it because the HR for this
-# Deployment is suspended on LOW_POWER / NORMAL by the controller too.
+# "Folding" is a historical name — the workload is actually BOINC
+# attached to Einstein@Home (einstein.phys.uwm.edu). Kept as `folding`
+# so the sonnen-power-controller's enable_folding()/disable_folding()
+# keep targeting it without rewiring config.
 #
-# The image yurinnick/folding-at-home is the most-used community image on
-# Docker Hub (Alpine-based, FAH_USER / FAH_TEAM / FAH_PASSKEY env). Swap
-# for `foldingathome/fah-image` once the official OCI image is tagged for
-# ARM/AMD64 Alpine; the official one presently ships Debian-only tags.
+# Scale: replicas=0 until the sonnen controller enters BURN stage.
+# Attachment: the BOINC client reads account_<project>.xml at startup
+# from /var/lib/boinc/. The `einstein-account` SOPS secret is mounted
+# at that path with the auth key.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,19 +33,15 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: fah
-          image: yurinnick/folding-at-home:7.6.21
+        - name: boinc
+          image: boinc/client:latest
           imagePullPolicy: IfNotPresent
-          args:
-            - --user=hschoss
-            - --team=1066966
-            - --power=full
-            - --gpu=false
-            - --smp=true
+          # No args — the client auto-attaches on first start by reading
+          # the account_einstein.phys.uwm.edu.xml file we drop in via
+          # the Secret volume mount.
           resources:
-            # Deliberately generous so that F@H fills surplus power; the
-            # controller only enables this when the battery is above the
-            # BURN threshold with sustained solar surplus.
+            # Deliberately generous so BOINC fills surplus power when
+            # the sonnen controller permits it.
             requests:
               cpu: "2"
               memory: 1Gi
@@ -58,8 +53,22 @@ spec:
             readOnlyRootFilesystem: false
             capabilities:
               drop: [ALL]
-      # Prefer the beefier workers; the control plane is excluded by its
-      # NoSchedule taint already.
+          volumeMounts:
+            - name: boinc-data
+              mountPath: /var/lib/boinc
+            - name: einstein-account
+              mountPath: /var/lib/boinc/account_einstein.phys.uwm.edu.xml
+              subPath: account_einstein.phys.uwm.edu.xml
+              readOnly: true
+      volumes:
+        - name: boinc-data
+          emptyDir: {}
+        - name: einstein-account
+          secret:
+            secretName: einstein-account
+            items:
+              - key: account_einstein.phys.uwm.edu.xml
+                path: account_einstein.phys.uwm.edu.xml
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
