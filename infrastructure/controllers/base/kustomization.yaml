@@ -8,3 +8,4 @@ resources:
   - external-dns.yaml
   - longhorn.yaml
   - metallb.yaml
+  - velero.yaml

@@ -23,7 +23,6 @@ flux reconcile source git flux-system -n flux-system
 flux reconcile kustomization infra-controllers  -n flux-system
 flux reconcile kustomization infra-configs      -n flux-system
 flux reconcile kustomization apps               -n flux-system
-flux reconcile kustomization infra-velero       -n flux-system
 
 # diagnose a stuck one
 flux -n flux-system describe kustomization <name>

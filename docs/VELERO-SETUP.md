@@ -162,18 +162,16 @@ You can use a systemd unit instead if that fits your Pi setup better.
 
 When applying the manifests through Flux, reconcile in this order:
 
-1. `infra-controllers`
-2. `infra-configs`
-3. `infra-velero`
-4. `infra-velero-schedules`
-5. `apps`
+1. `infra-controllers` (includes the Velero HelmRelease now)
+2. `infra-configs` (includes Velero schedules + credentials now)
+3. `apps`
 
 Useful commands:
 
 ```bash
 flux get kustomizations -A
-flux reconcile kustomization infra-velero -n flux-system
-flux reconcile kustomization infra-velero-schedules -n flux-system
+flux reconcile kustomization infra-controllers -n flux-system   # re-rolls Velero HelmRelease
+flux reconcile kustomization infra-configs -n flux-system       # re-rolls schedules + credentials
 ```
 
 If the Pi is not reachable yet, stop before reconciling and fix the Pi first.

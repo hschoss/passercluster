@@ -11,7 +11,7 @@ Every private URL served by the cluster and where it terminates.
 | Authentik      | `https://auth.passer.lan`, `https://authentik.passer.lan` | `authentik`     | `authentik-server:80`      | Two hostnames, one Service; SSO for the stack     |
 | Nextcloud      | `https://nextcloud.passer.lan`   | `nextcloud`     | `nextcloud:8080`           | Host URL must match chart values                  |
 | Immich         | `https://immich.passer.lan`      | `immich`        | `immich-server:2283`       | Media library and mobile app                      |
-| Jellyfin       | `https://jellyfin.passer.lan`    | `jellyfin`      | `jellyfin:8096`            | Media streaming, config on `talos-8bp-pih`         |
+| Jellyfin       | `https://jellyfin.passer.lan`    | `jellyfin`      | `jellyfin:8096`            | Media streaming, config on `passer-w-03`           |
 | Paperless-ngx  | `https://paperless.passer.lan`   | `paperless-ngx` | `paperless-ngx:8000`       | Document archive                                  |
 | Vaultwarden    | `https://vaultwarden.passer.lan` | `vaultwarden`   | `vaultwarden:80`           | Password manager, no SSO available                |
 | Longhorn UI    | `https://longhorn.passer.lan`    | `longhorn-system` | `longhorn-frontend:80`   | Storage dashboard                                 |

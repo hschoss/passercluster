@@ -28,7 +28,7 @@ metadata:
   name: myapp
 ```
 
-### `repository.yaml`
+### `helmrepository.yaml`
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
@@ -40,9 +40,9 @@ spec:
   url: https://charts.example.com
 ```
 
-Or `OCIRepository` for OCI charts (see `apps/base/immich/oci-repository.yaml`).
+Or `OCIRepository` for OCI charts in `ocirepository.yaml` (see `apps/base/immich/ocirepository.yaml`).
 
-### `release.yaml`
+### `helmrelease.yaml`
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -120,8 +120,8 @@ kind: Kustomization
 namespace: myapp
 resources:
   - namespace.yaml
-  - repository.yaml
-  - release.yaml
+  - helmrepository.yaml
+  - helmrelease.yaml
   - httproute.yaml
   - myapp-db.secret.yaml    # only if you added the secret
 ```
@@ -234,8 +234,8 @@ pattern: `docs/AUTHENTIK-SSO.md`.
 ## 9. Optionally add to Velero
 
 If the app has state worth backing up, extend the schedule in
-`infrastructure/velero-schedules/` to include the namespace. See
-`docs/velero-backups.md` for the schedule format.
+`infrastructure/configs/base/velero-schedules.yaml` to include the
+namespace. See `docs/velero-backups.md` for the schedule format.
 
 ## 10. Optionally list it on the landing page
 

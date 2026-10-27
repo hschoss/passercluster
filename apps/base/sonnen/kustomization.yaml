@@ -4,7 +4,7 @@ resources:
   - namespace.yaml
   - postgres.yaml
   - rbac.yaml
-  - config.yaml
+  - configmap.yaml
   - collector.yaml
   - decision-engine.yaml
   - sonnen-db.secret.yaml

@@ -3,13 +3,13 @@
 ## Architecture
 
 ```
-192.168.178.200 / talos-ja7-1cq  control plane only, no Longhorn data
-192.168.178.201 / talos-m2p-286  NVMe performance-secondary  /var/mnt/longhorn-performance-secondary
-192.168.178.202 / talos-7tm-1kh  NVMe performance-primary    /var/lib/longhorn plus /var/mnt/longhorn-sdb
-192.168.178.203 / talos-8bp-pih  HDD capacity + backup       /var/mnt/longhorn-capacity-*
+192.168.178.200 / passer-cp-01   control plane only, no Longhorn data
+192.168.178.201 / passer-w-01    NVMe performance-secondary  /var/mnt/longhorn-performance-secondary
+192.168.178.202 / passer-w-02    NVMe performance-primary    /var/lib/longhorn plus /var/mnt/longhorn-sdb
+192.168.178.203 / passer-w-03    HDD capacity + backup       /var/mnt/longhorn-capacity-*
 ```
 
-Longhorn is installed by Flux from `infrastructure/controllers/longhorn.yaml`. Configuration is applied after the Helm release by `infra-configs` in `clusters/production/infrastructure.yaml`.
+Longhorn is installed by Flux from `infrastructure/controllers/base/longhorn.yaml`. Configuration is applied after the Helm release by `infra-configs` in `clusters/production/infrastructure.yaml`.
 
 ## Storage Classes
 
@@ -20,7 +20,7 @@ Longhorn is installed by Flux from `infrastructure/controllers/longhorn.yaml`. C
 | `longhorn-jellyfin` | Jellyfin media, 4Ti target | Node 203 HDD capacity disks |
 | `longhorn-backup` | Velero and backup data | Node 203 capacity disks; `/dev/sdi` is excluded until wiped intentionally |
 
-All new application PVCs should select one of these classes directly. Legacy classes in `infrastructure/configs/storageclasses.yaml` remain for existing workloads and should be migrated when convenient.
+All new application PVCs should select one of these classes directly. Legacy classes in `infrastructure/configs/base/storageclasses.yaml` remain for existing workloads and should be migrated when convenient.
 
 ## Talos Disk Patches
 
@@ -37,7 +37,7 @@ Run `scripts/longhorn-validate-disks.sh` before applying patches. Any partition 
 
 ## Snapshots And Backups
 
-Recurring jobs are defined in `infrastructure/configs/longhorn-recurring-jobs.yaml`:
+Recurring jobs are defined in `infrastructure/configs/base/longhorn-recurring-jobs.yaml`:
 
 - `snapshot-performance-6h`: every 6 hours, retain 10.
 - `snapshot-capacity-daily`: daily at 02:00, retain 10.
@@ -48,13 +48,13 @@ The default S3 target is configured in the HelmRelease as `s3://longhorn-backups
 
 ## Operations
 
-- Dashboard: `https://longhorn.lan` through `infrastructure/configs/longhorn-httproute.yaml`.
+- Dashboard: `https://longhorn.lan` through `infrastructure/configs/base/longhorn-httproute.yaml`.
 - Health check: run `scripts/longhorn-health-check.sh`.
 - Restore: prefer the Longhorn UI for production restores; `scripts/longhorn-restore-from-backup.sh` is a starting point and must be tested with a non-critical backup first.
 
 ## Monitoring
 
-`infrastructure/configs/longhorn-monitoring.yaml` contains `ServiceMonitor`, `PrometheusRule`, and a Grafana dashboard ConfigMap. It is intentionally not listed in `infrastructure/configs/kustomization.yaml` because this cluster does not currently have Prometheus Operator CRDs. Add it to the kustomization after installing those CRDs.
+`infrastructure/configs/base/longhorn-monitoring.yaml` contains `ServiceMonitor`, `PrometheusRule`, and a Grafana dashboard ConfigMap. It is intentionally not listed in `infrastructure/configs/base/kustomization.yaml` because this cluster does not currently have Prometheus Operator CRDs. Add it to the kustomization after installing those CRDs.
 
 Alerts cover disk usage over 80%, degraded volumes, pending volumes, and backup failures.
 
@@ -70,7 +70,7 @@ Alerts cover disk usage over 80%, degraded volumes, pending volumes, and backup 
 
 1. Read the Longhorn release notes for the target version.
 2. Confirm all volumes are healthy and backups are current.
-3. Update the chart version range in `infrastructure/controllers/longhorn.yaml`.
+3. Update the chart version range in `infrastructure/controllers/base/longhorn.yaml`.
 4. Reconcile Flux and monitor `longhorn-manager` logs.
 5. Run `scripts/longhorn-health-check.sh`.
 

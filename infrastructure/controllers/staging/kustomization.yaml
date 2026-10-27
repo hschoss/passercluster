@@ -1,5 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+# Staging uses only cert-manager + envoy-gateway. Kustomize's default
+# load-restrictor forbids referencing individual files from the base/
+# directory one level up, so we keep local copies of these two files
+# here. Keep in sync with ../base/<same filename> when changing.
 resources:
   - cert-manager.yaml
   - envoy-gateway.yaml

@@ -35,7 +35,7 @@ Fix: kexec-reboot the affected worker, wait until Ready.
 
 ```bash
 talosctl -n 192.168.178.201 reboot
-kubectl get node talos-m2p-286 -w
+kubectl get node passer-w-01 -w
 ```
 
 Do them one at a time, not in parallel.
@@ -51,7 +51,7 @@ kubectl get sc <storage-class> -o yaml | grep -A3 parameters
 
 Example: `longhorn-nvme-201` requires node **and** disk tagged `nvme-201`. If the tag is missing from the node CR, add it via the Longhorn UI (`https://longhorn.passer.lan`) or `kubectl edit nodes.longhorn.io <name>`.
 
-If the volume was placed on the wrong node because the workload pod scheduled there first, add a `nodeSelector` to the workload (see `apps/base/immich/postgres.yaml` for a CNPG example pinning to `talos-m2p-286`).
+If the volume was placed on the wrong node because the workload pod scheduled there first, add a `nodeSelector` to the workload (see `apps/base/immich/postgres.yaml` for a CNPG example pinning to `passer-w-02`).
 
 ## Flux Kustomization stuck in `Reconciling`
 
@@ -76,21 +76,25 @@ admission webhook "validator.longhorn.io" denied the request
 Two flavours seen in this cluster:
 
 **Ghost node** — a hostname from a previous cluster generation is
-still baked into `infrastructure/configs/longhorn-node-labels.yaml`.
+still baked into `infrastructure/configs/base/longhorn-node-labels.yaml`.
 Longhorn creates a `Node.longhorn.io` CR for it, marks it NotReady
 (`Kubernetes node <name> not ready: NodeStatusNeverUpdated`) and
 then refuses every further apply against the file. Cleanup:
 
 ```bash
-# 1. rename in both copies of the file (base + production)
+# 1. rename in the base file (single source of truth; production + staging
+#    overlays reference ../base so no second edit is needed)
 sed -i 's/<old-hostname>/<new-hostname>/g' \
-  infrastructure/configs/longhorn-node-labels.yaml \
-  infrastructure/configs/production/longhorn-node-labels.yaml
+  infrastructure/configs/base/longhorn-node-labels.yaml
 git commit -am "Fix ghost hostname in Longhorn labels" && git push
 
 # 2. wipe the stale CRs (safe because they have no live disks)
 kubectl -n longhorn-system delete node.longhorn.io <old-hostname>
 kubectl delete node <old-hostname>
+
+# 3. re-apply node labels to the renamed Node object (kubelet-owned object
+#    needs its storage-tier / disk-type labels back)
+scripts/apply-node-labels.sh
 ```
 
 **Blocked disk removal** — the manifest removed a disk from a node,

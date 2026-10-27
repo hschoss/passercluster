@@ -9,3 +9,9 @@ resources:
   - longhorn-node-labels.yaml
   - longhorn-recurring-jobs.yaml
   - longhorn-storage-classes.yaml
+  - velero-credentials.secret.yaml
+  - velero-schedules.yaml
+# Dormant (present as files but not currently enabled; move into
+# `resources:` above when ready to activate):
+#   - longhorn-application-pvcs.yaml
+#   - longhorn-monitoring.yaml

@@ -3,10 +3,10 @@ kind: Kustomization
 namespace: authentik
 resources:
   - namespace.yaml
-  - repository.yaml
+  - helmrepository.yaml
   - authentik-credentials.secret.yaml
   - authentik-db.secret.yaml
   - authentik-blueprints.secret.yaml
   - webauthn-policy-blueprint.yaml
   - postgres.yaml
-  - release.yaml
+  - helmrelease.yaml

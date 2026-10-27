@@ -1,53 +1,12 @@
 ---
-# Node 200: control plane only; Longhorn components may run, but no disks are scheduled.
-apiVersion: v1
-kind: Node
-metadata:
-  name: passer-cp-01
-  labels:
-    storage.passercluster.io/longhorn: disabled
-    storage.passercluster.io/node-id: "200"
-    node.longhorn.io/create-default-disk: "false"
----
-# Node 202: performance primary NVMe tier.
-apiVersion: v1
-kind: Node
-metadata:
-  name: passer-w-02
-  labels:
-    storage-tier: performance
-    disk-type: nvme
-    storage.passercluster.io/longhorn: enabled
-    storage.passercluster.io/node-id: "202"
-    node.longhorn.io/create-default-disk: "false"
----
-# Node 201 (passer-w-01): 1 TB NVMe. Install + Longhorn data share the disk.
-apiVersion: v1
-kind: Node
-metadata:
-  name: passer-w-01
-  labels:
-    storage-tier: performance
-    disk-type: nvme
-    storage.passercluster.io/longhorn: enabled
-    storage.passercluster.io/node-id: "201"
-    node.longhorn.io/create-default-disk: "false"
----
-# Node 203 (passer-w-03): 2x4TB Seagate HDD (sda, sdb), 1x500GB WDC HDD (sdc),
-# 1x250GB Samsung 860 SSD (sdd, holds Talos install). Talos UserVolumeConfig
-# (live on the node, see talos/user-volumes-passer-w-03.yaml) mounts sda1 at
-# /var/mnt/longhorn-sda and sdb1 at /var/mnt/longhorn-sdb; both are exposed to
-# Longhorn below with hdd/media tags. sdc is unused.
-apiVersion: v1
-kind: Node
-metadata:
-  name: passer-w-03
-  labels:
-    storage-tier: capacity
-    disk-type: hdd
-    storage.passercluster.io/longhorn: enabled
-    storage.passercluster.io/node-id: "203"
-    node.longhorn.io/create-default-disk: "false"
+# Longhorn Node CRs: declare each node's disks, tags, and scheduling policy.
+#
+# Node LABELS (storage-tier, disk-type, …) are NOT managed here anymore —
+# they are applied by `scripts/apply-node-labels.sh`. Earlier this file
+# also contained `apiVersion: v1 kind: Node` entries with just labels; a
+# Flux reconcile with `prune: true` deleted the real Node objects when
+# we renamed them. The kubelet owns the Node object; GitOps owns the
+# Longhorn config.
 ---
 apiVersion: longhorn.io/v1beta2
 kind: Node

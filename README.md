@@ -6,10 +6,10 @@ Home Kubernetes cluster on 4 Talos nodes, managed with Flux from this repo.
 
 | Node | IP | Role | Notes |
 |---|---|---|---|
-| talos-krw-er8 | 192.168.178.200 | control-plane | fresh CA/etcd since 2026-09-27 |
-| talos-m2p-286 | 192.168.178.201 | worker | Longhorn tag `nvme-201` (fast, primary DB) |
-| talos-7tm-1kh | 192.168.178.202 | worker | Longhorn tag `nvme-202` (media, big fast disk) |
-| talos-8bp-pih | 192.168.178.203 | worker | Longhorn tag `capacity` (HDD, cold storage) |
+| passer-cp-01 | 192.168.178.200 | control-plane | single CP; etcd not HA |
+| passer-w-01  | 192.168.178.201 | worker        | Longhorn tag `nvme-201` |
+| passer-w-02  | 192.168.178.202 | worker        | Longhorn tag `nvme-202` (primary DB + media) |
+| passer-w-03  | 192.168.178.203 | worker        | Longhorn tags `capacity` + `backup` (HDD) |
 
 ## Services (all `https://*.passer.lan`)
 
@@ -23,6 +23,8 @@ Home Kubernetes cluster on 4 Talos nodes, managed with Flux from this repo.
 - `podinfo.passer.lan` – smoke-test app
 - `finance.passer.lan` – long-term stock dashboard (Findash, first version placeholder — see `docs/FINDASH-DEPLOY.md`)
 - `passer.lan` – minimal landing page linking everything, plus the docs at `/docs/`
+
+Sonnen power controller runs as the `sonnen` app (CNPG + collector + decision-engine); not externally reachable, drives `folding` scaling.
 
 DNS: Pi-hole forwards `*.passer.lan` to CoreDNS at `192.168.178.241`. Gateway IP: `192.168.178.240`.
 
@@ -42,13 +44,25 @@ DNS: Pi-hole forwards `*.passer.lan` to CoreDNS at `192.168.178.241`. Gateway IP
 ## Layout
 
 ```
-apps/            # HelmReleases + values per application
-clusters/        # Flux entry points (GitRepository + top-level Kustomizations)
-infrastructure/  # Controllers (Envoy, cert-manager, MetalLB, Longhorn, …) + configs
-talos/           # Machine config & credentials (gitignored)
-secrets/         # Self-signed passer.lan TLS material (gitignored)
-scripts/         # Small helpers (TLS apply, Longhorn checks, Velero restore)
-docs/            # Runbooks
+apps/
+  base/<app>/            # per-app manifests (namespace, helmrelease, secrets, HTTPRoute, …)
+  production/            # Kustomize overlay: patches on top of the bases
+  staging/, e2e/         # alternate overlays
+infrastructure/
+  controllers/
+    base/                # Helm installs: cert-manager, cnpg, coredns, envoy-gateway, external-dns, longhorn, metallb, velero
+    production/          # resources: [../base]
+    staging/             # subset (cert-manager, envoy-gateway)
+  configs/
+    base/                # cluster-wide CRs: ClusterIssuer, Gateway, StorageClasses, Longhorn Node CRs, Velero schedules, …
+    production/          # resources: [../base]
+    staging/             # subset
+clusters/
+  production/, staging/, e2e/   # Flux bootstrap + per-env Kustomization fan-out
+scripts/                 # Operational helpers (apply-node-labels.sh, TLS replication, Longhorn checks, …)
+talos/                   # Machine configs + talosconfig + kubeconfig (gitignored)
+secrets/                 # Self-signed passer.lan TLS material (gitignored)
+docs/                    # Runbooks
 ```
 
 ## Secrets
@@ -57,3 +71,7 @@ docs/            # Runbooks
 - Every `*.secret.yaml` under `apps/` and `infrastructure/` is encrypted at rest.
 - The cluster decrypts them via a `flux-system/sops-age` Secret (created from the same age key).
 - The self-signed TLS for `*.passer.lan` lives in `secrets/` and is applied to every namespace with `scripts/apply-passer-lan-tls-secret.sh`.
+
+## Node labels
+
+Node labels (`storage-tier`, `disk-type`, `storage.passercluster.io/*`) are applied with `scripts/apply-node-labels.sh`, not through GitOps. The Node object is kubelet's — managing it with a Flux Kustomization that prunes caused a ghost-node incident on 2026-10-27.

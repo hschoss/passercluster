@@ -120,7 +120,7 @@ Dann:
    `apps/base/authentik/webauthn-flow-blueprint.yaml` (plain, kein
    SOPS — ist keine Credential).
 2. In `apps/base/authentik/kustomization.yaml` einfügen.
-3. In `apps/base/authentik/release.yaml` als `subPath`-Mount neben
+3. In `apps/base/authentik/helmrelease.yaml` als `subPath`-Mount neben
    `webauthn-policy-blueprint.yaml` hinzufügen.
 4. Commit, push, Flux reconcile.
 

@@ -10,7 +10,7 @@ resources:
   - ../base/authentik
   - ../base/passer-home
   - ../base/finance
-  - ../base/power-controller
+  - ../base/sonnen
   - ../base/folding
   - ../base/home-assistant
 patches:

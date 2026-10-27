@@ -82,8 +82,8 @@ done
 
 ## Storage (Longhorn)
 
-- Storage classes are per-node: `longhorn-nvme-201` (talos-m2p-286), `longhorn-nvme-202` (talos-7tm-1kh), and per-workload tiers like `longhorn-nextcloud-fast`, `longhorn-immich-fast`, `longhorn-jellyfin`. Full list: `infrastructure/configs/longhorn-storage-classes.yaml`.
-- They pin data to a specific worker via `nodeSelector` + `diskSelector` tags declared in `infrastructure/configs/longhorn-node-labels.yaml`.
+- Storage classes are per-node: `longhorn-nvme-201` (passer-w-01), `longhorn-nvme-202` (passer-w-02), and per-workload tiers like `longhorn-nextcloud-fast`, `longhorn-immich-fast`, `longhorn-jellyfin`. Full list: `infrastructure/configs/base/longhorn-storage-classes.yaml`.
+- They pin data to a specific worker via `nodeSelector` + `diskSelector` tags declared in `infrastructure/configs/base/longhorn-node-labels.yaml`.
 - After a worker reboot, watch `kubectl -n longhorn-system get volumes` until every attached volume is `healthy` again.
 - Dashboard: `kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80` or `https://longhorn.passer.lan`.
 - Compact health helper: `scripts/longhorn-health-check.sh`.

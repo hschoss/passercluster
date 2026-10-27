@@ -17,21 +17,16 @@ A single-cluster homelab, Talos + Flux, all state in this repo.
 
 **Nodes (fixed by DHCP reservation):**
 
-| IP              | Hostname        | Role          | Longhorn tags               |
-|-----------------|-----------------|---------------|-----------------------------|
-| 192.168.178.200 | `talos-krw-er8` | control-plane | none (no data disks)        |
-| 192.168.178.201 | `passer-w-01`   | worker        | `nvme`, `nvme-201`          |
-| 192.168.178.202 | `talos-7tm-1kh` | worker        | `nvme`, `nvme-202`, `ssd`   |
+| IP              | Hostname        | Role          | Longhorn tags                        |
+|-----------------|-----------------|---------------|--------------------------------------|
+| 192.168.178.200 | `passer-cp-01`  | control-plane | none (no data disks)                 |
+| 192.168.178.201 | `passer-w-01`   | worker        | `nvme`, `nvme-201`                   |
+| 192.168.178.202 | `passer-w-02`   | worker        | `nvme`, `nvme-202`, `ssd`            |
 | 192.168.178.203 | `passer-w-03`   | worker        | `capacity`, `backup`, `hdd`, `media` |
 
-> **Hostname migration in progress.** The planned scheme (per
-> `homelab-docs/passer/`) is `passer-cp-01` / `passer-w-01…03`. Only
-> workers that are reinstalled receive the new name today; `.200` and
-> `.202` are still on the Talos-generated `talos-krw-er8` / `talos-7tm-1kh`
-> and will rename on their next reinstall. The 201/203 reinstall
-> (October 2026) used `talosctl gen secrets --from-controlplane-config`
-> plus a strategic patch to pin hostname + install disk; see
-> `scripts/talos-worker-config.sh` once that is scripted.
+Node labels (`storage-tier`, `disk-type`, `storage.passercluster.io/*`) are
+applied by `scripts/apply-node-labels.sh`, idempotently. They are **not**
+GitOps-managed — see §12 for why.
 
 **Reserved IPs on the LAN:**
 
@@ -60,29 +55,39 @@ README.md                  # short user-facing overview
 .gitignore                 # keeps talos/, secrets/, .claude/ out of git
 
 apps/
-  base/          # canonical per-app manifests (namespace, release, secrets, HTTPRoute)
-  production/    # overlays: values patches, HTTPRoute host overrides, adds resources
-  staging/, e2e/ # non-production overlays (rarely touched)
+  base/<app>/      # canonical per-app manifests (namespace, helmrelease, secrets, HTTPRoute, …)
+  production/      # Kustomize overlay: patches + HTTPRoute host overrides, lists which bases to include
+  staging/, e2e/   # alternate overlays
 
 clusters/
   production/
     apps.yaml                  # Flux Kustomization: apps → apps/production
-    infrastructure.yaml        # Flux Kustomizations: infra-controllers, infra-configs, infra-velero, infra-velero-schedules
+    infrastructure.yaml        # Flux Kustomizations: infra-controllers, infra-configs
     artifacts.yaml             # ArtifactGenerator that carves the monorepo into apps/ + infrastructure/ artifacts
     flux-system/               # bootstrap manifests for Flux itself
-  staging/, e2e/               # non-prod
+  staging/, e2e/               # non-prod (same shape)
 
 infrastructure/
-  controllers/       # HelmReleases + HelmRepositories: Envoy Gateway, cert-manager, CNPG, external-dns, CoreDNS, Longhorn, MetalLB
-  configs/           # cluster-wide config: Gateway CR, MetalLB IP pool, Longhorn node labels/disks, StorageClasses, ClusterIssuers, Velero config, TLS-replication scripts
-  velero/            # Velero HelmRelease + credentials
-  velero-schedules/  # backup schedules
+  controllers/
+    base/        # canonical HelmReleases + HelmRepositories (cert-manager, cnpg, coredns, envoy-gateway, external-dns, longhorn, metallb, velero)
+    production/  # overlay: resources: [../base]
+    staging/     # overlay: subset (cert-manager, envoy-gateway); kustomize's load-restrictor forces local file copies here
+  configs/
+    base/        # cluster-wide config CRs: ClusterIssuers, Gateway, StorageClasses, Longhorn Node CRs, Longhorn storage-classes, Velero schedules + credentials, …
+    production/  # overlay: resources: [../base]
+    staging/     # overlay: subset
 
-scripts/           # bash helpers (see §8)
-docs/              # runbooks; docs/README.md is the map
-talos/             # machine configs + kubeconfig/talosconfig (GITIGNORED)
-secrets/           # locally generated TLS (GITIGNORED)
+scripts/         # bash helpers (see §8)
+docs/            # runbooks; docs/README.md is the map
+talos/           # machine configs + kubeconfig/talosconfig (GITIGNORED)
+secrets/         # locally generated TLS (GITIGNORED)
 ```
+
+The old `infrastructure/velero/` and `infrastructure/velero-schedules/`
+wrapper directories were removed on 2026-10-27 — velero's HelmRelease
+now sits under `controllers/base/velero.yaml` (same chain as every
+other controller) and its schedules + credentials sit under
+`configs/base/`.
 
 ---
 
@@ -97,23 +102,22 @@ GitRepository flux-system
 
 Kustomization flux-system
         │
-        ├── Kustomization infra-controllers      # infrastructure/controllers/production
-        │        │
-        │        └── Kustomization infra-configs # infrastructure/configs/production
-        │                 │
-        │                 ├── Kustomization apps # apps/production
-        │                 │
-        │                 └── Kustomization infra-velero
-        │                          │
-        │                          └── Kustomization infra-velero-schedules
+        └── Kustomization infra-controllers       # infrastructure/controllers/production
+                 │
+                 └── Kustomization infra-configs  # infrastructure/configs/production
+                          │
+                          └── Kustomization apps  # apps/production
 ```
 
-Everything is chained via `dependsOn`. A failure in `infra-configs`
-stops **every** downstream kustomization, so `apps` will never roll
-out — this has happened when stale node references in
-`infrastructure/configs/longhorn-node-labels.yaml` created ghost
-`Node.longhorn.io` CRs and Longhorn's validating webhook refused
-further disk changes. See §12.
+Three Kustomizations, chained via `dependsOn`. Velero's HelmRelease
+rides inside `infra-controllers`, its schedules + credentials inside
+`infra-configs`. The sonnen stack lives in `apps` like any other app.
+
+A failure in `infra-configs` stops **every** downstream kustomization,
+so `apps` will never roll out — this has happened when stale node
+references in `infrastructure/configs/base/longhorn-node-labels.yaml`
+created ghost `Node.longhorn.io` CRs and Longhorn's validating webhook
+refused further disk changes. See §12.
 
 **All Kustomizations that touch a `*.secret.yaml` set `spec.decryption.provider: sops`** with `secretRef: sops-age`. That Secret is created out-of-band from `~/.config/sops/age/keys.txt`. If missing, every downstream kustomization goes `NotReady` with a decryption error.
 
@@ -135,8 +139,8 @@ flux reconcile kustomization apps -n flux-system
 | passer-home     | `passer-home`   | `passer.lan`                                | `nginxinc/nginx-unprivileged` (static)          | ConfigMaps                       |
 | Authentik       | `authentik`     | `auth.passer.lan`, `authentik.passer.lan`   | `goauthentik.io/charts/authentik`               | CNPG cluster `authentik-postgres`|
 | Nextcloud       | `nextcloud`     | `nextcloud.passer.lan`                      | `nextcloud/nextcloud`                           | MariaDB subchart + Longhorn PVC  |
-| Immich          | `immich`        | `immich.passer.lan`                         | `ghcr.io/immich-app/immich-charts/immich` OCI   | CNPG cluster `immich-postgres`, valkey, media on `talos-7tm-1kh` |
-| Jellyfin        | `jellyfin`      | `jellyfin.passer.lan`                       | `jellyfin/jellyfin`                             | Config on `longhorn`, media on `longhorn-jellyfin` (`talos-8bp-pih`) |
+| Immich          | `immich`        | `immich.passer.lan`                         | `ghcr.io/immich-app/immich-charts/immich` OCI   | CNPG cluster `immich-postgres`, valkey, media on `passer-w-02` |
+| Jellyfin        | `jellyfin`      | `jellyfin.passer.lan`                       | `jellyfin/jellyfin`                             | Config on `longhorn`, media on `longhorn-jellyfin` (`passer-w-03`) |
 | Paperless-ngx   | `paperless-ngx` | `paperless.passer.lan`                      | `paperless-ngx` (gabe565 chart)                 | Postgres + Redis subcharts, Longhorn PVCs |
 | Vaultwarden     | `vaultwarden`   | `vaultwarden.passer.lan`                    | `guerzon/vaultwarden`                           | Longhorn PVC                     |
 | Podinfo         | `podinfo`       | `podinfo.passer.lan`                        | `stefanprodan/podinfo`                          | none                             |
@@ -217,12 +221,15 @@ grep -L 'ENC\[' apps/**/*.secret.yaml infrastructure/**/*.secret.yaml
 
 ```
 namespace.yaml              # kind: Namespace, name: <app>
-repository.yaml             # HelmRepository or OCIRepository
-release.yaml                # HelmRelease with base values
+helmrepository.yaml         # HelmRepository (OCI apps use ocirepository.yaml instead)
+helmrelease.yaml            # HelmRelease with base values
 httproute.yaml              # HTTPRoute bound to the Envoy Gateway on <app>.passer.lan
 <app>-*.secret.yaml         # SOPS-encrypted secrets (DB creds, OIDC secrets, admin passwords)
 kustomization.yaml          # ties them together
 ```
+
+Non-Helm apps (passer-home, sonnen, folding, finance placeholder) omit
+helmrelease/helmrepository and ship plain Deployment / Cluster / etc. YAMLs instead.
 
 Environment-specific patches go into `apps/production/<app>-values.yaml`
 plus (occasionally) `apps/production/<app>-httproute.yaml`, both listed
@@ -267,21 +274,21 @@ Longhorn StorageClasses are pinned to specific worker nodes via tags:
 | StorageClass              | Backing tag(s)         | Where data actually lives                |
 |---------------------------|------------------------|------------------------------------------|
 | `longhorn`                | any                    | anywhere Longhorn scheduling allows      |
-| `longhorn-nvme-201`       | `nvme-201`             | `talos-m2p-286` only                     |
-| `longhorn-nvme-202`       | `nvme-202`             | `talos-7tm-1kh` only                     |
+| `longhorn-nvme-201`       | `nvme-201`             | `passer-w-01` only                       |
+| `longhorn-nvme-202`       | `nvme-202`             | `passer-w-02` only                       |
 | `longhorn-nextcloud-fast` | `nvme-202`             | Nextcloud config / MariaDB               |
 | `longhorn-immich-fast`    | `nvme-202`, `ssd`      | Immich library, Paperless media          |
-| `longhorn-jellyfin`       | `capacity`, `media`    | `talos-8bp-pih` HDDs                     |
+| `longhorn-jellyfin`       | `capacity`, `media`    | `passer-w-03` HDDs                       |
 
-Full definitions in `infrastructure/configs/longhorn-storage-classes.yaml`.
+Full definitions in `infrastructure/configs/base/longhorn-storage-classes.yaml`.
 **When you add a StorageClass, also add the matching tag to the target
-Node.longhorn.io CR** in `infrastructure/configs/longhorn-node-labels.yaml`,
+Node.longhorn.io CR** in `infrastructure/configs/base/longhorn-node-labels.yaml`,
 otherwise `replica scheduling failed`.
 
 ### Node pinning
 
 For workloads that must live on a specific node (Immich media on
-`talos-7tm-1kh`, MariaDB on the same, Findash postgres wherever
+`passer-w-02`, MariaDB on the same, Findash postgres wherever
 CNPG lands), add `nodeSelector: { kubernetes.io/hostname: <name> }`
 to the podSpec or (for HelmReleases) to `defaultPodOptions.nodeSelector`.
 
@@ -368,10 +375,12 @@ Longhorn refuses to apply the change because a disk is mid-sync, a
 node CR is stale, or a disk is being removed while replicas still
 sit on it. Recovery:
 
-- Ghost node: rename the entry in
-  `infrastructure/configs/longhorn-node-labels.yaml`, delete the CR
+- Ghost Longhorn Node: rename the entry in
+  `infrastructure/configs/base/longhorn-node-labels.yaml`, delete the CR
   (`kubectl -n longhorn-system delete node.longhorn.io <name>` and
-  `kubectl delete node <name>`).
+  `kubectl delete node <name>`), then re-run
+  `scripts/apply-node-labels.sh` so the fresh Node object regains its
+  storage/role labels.
 - Blocked disk removal: open the Longhorn UI, node → disk → "Request
   Eviction", wait until replicas are gone, then apply.
 
@@ -415,10 +424,11 @@ kubectl -n flux-system patch gitrepository flux-system --type=json \
    `docs/CONTROL-PLANE-FIX.md`.
 3. `kubectl get nodes` — all four `Ready`.
 4. If nodes were reinstalled with new hostnames, update
-   `infrastructure/configs/longhorn-node-labels.yaml` **and**
-   `infrastructure/configs/production/longhorn-node-labels.yaml`
-   before Flux applies anything. Old hostnames become ghost Longhorn
-   Nodes and permanently block infra-configs. See §10.
+   `infrastructure/configs/base/longhorn-node-labels.yaml` **before** Flux
+   applies anything. Old hostnames become ghost Longhorn Nodes and
+   permanently block infra-configs. See §10. Then run
+   `scripts/apply-node-labels.sh` to reattach node labels (storage-tier,
+   disk-type, …) to the fresh Node objects.
 5. `flux -n flux-system resume kustomization flux-system` if it was
    suspended.
 6. Watch: `flux get kustomizations -A -w` until all `Ready=True`.
@@ -437,15 +447,21 @@ kubectl -n flux-system patch gitrepository flux-system --type=json \
 Any leftover Longhorn CR from a previous cluster generation
 (node, disk, volume) causes `admission webhook validator.longhorn.io denied`
 on every subsequent apply of `infrastructure/configs/`, which cascades
-into `apps` never getting reconciled. Two real occurrences so far:
+into `apps` never getting reconciled. Real occurrences so far:
 
 - **Ghost node `talos-ja7-1cq`** — old control-plane hostname baked
   into `longhorn-node-labels.yaml`. Fixed in commit `20afd3e` by
-  renaming to `talos-krw-er8`.
-- **Ghost disk `default-disk-088400000000` on `talos-8bp-pih`** —
+  renaming to the new hostname.
+- **Ghost disk `default-disk-088400000000` on worker 203** —
   Longhorn refused to delete because replicas / backing images still
   sat on it. Recovery is a manual eviction in the Longhorn UI, then
   the manifest change goes through.
+- **Ghost k8s Node objects on 2026-10-27** — hostnames `talos-krw-er8`
+  / `talos-7tm-1kh` renamed in a file that also contained
+  `apiVersion: v1 kind: Node` label entries. Flux with `prune: true`
+  deleted the real Node objects. Fix: those label entries moved to
+  `scripts/apply-node-labels.sh`; GitOps now only owns the
+  `longhorn.io/v1beta2` Node CRs.
 
 **When Flux says infra-configs isn't ready, this is the first thing
 to check.**

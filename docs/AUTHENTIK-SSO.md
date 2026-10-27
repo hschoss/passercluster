@@ -40,7 +40,7 @@ kubectl -n <ns> get secret <name>-oidc -o jsonpath='{.data.OIDC_CLIENT_SECRET}' 
 
 ### Paperless-ngx – fully declarative
 
-`apps/base/paperless-ngx/release.yaml` sets `PAPERLESS_APPS` and injects
+`apps/base/paperless-ngx/helmrelease.yaml` sets `PAPERLESS_APPS` and injects
 `PAPERLESS_SOCIALACCOUNT_PROVIDERS` (JSON blob with the OIDC config) from
 `paperless-oidc`. After the HelmRelease reconciles, `paperless.passer.lan`
 should show a "Sign in with Authentik" button next to the normal login.

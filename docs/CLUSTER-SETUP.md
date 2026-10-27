@@ -63,7 +63,7 @@ Not optional. Each step's readiness gate must pass before the next.
    Rolls out every HelmRelease under `apps/production/`.
 8. **Velero healthy.**
    ```bash
-   flux reconcile kustomization infra-velero -n flux-system
+   flux reconcile kustomization infra-controllers -n flux-system
    kubectl -n velero get pods
    kubectl -n velero get backup
    ```
@@ -74,7 +74,7 @@ Not optional. Each step's readiness gate must pass before the next.
 |----------------------------------------------------------------------------|------------------------------------------------------|
 | `clusters/production/flux-system/`                                         | Bootstrap manifests for Flux itself                  |
 | `clusters/production/artifacts.yaml`                                       | `ArtifactGenerator` splitting the monorepo into `infrastructure` + `apps` ExternalArtifacts |
-| `clusters/production/infrastructure.yaml`                                  | Flux Kustomizations `infra-controllers`, `infra-configs`, `infra-velero`, `infra-velero-schedules` |
+| `clusters/production/infrastructure.yaml`                                  | Flux Kustomizations `infra-controllers`, `infra-configs` (velero folded into both) |
 | `clusters/production/apps.yaml`                                            | Flux Kustomization `apps` → `apps/production`        |
 | `infrastructure/controllers/production/kustomization.yaml`                 | Controllers overlay                                  |
 | `infrastructure/configs/production/kustomization.yaml`                     | Configs overlay (Longhorn node labels, StorageClasses, gateway, etc.) |
