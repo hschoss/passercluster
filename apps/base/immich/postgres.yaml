@@ -11,7 +11,7 @@ spec:
       - "vchord.so"
   affinity:
     nodeSelector:
-      kubernetes.io/hostname: talos-7tm-1kh
+      kubernetes.io/hostname: passer-w-02
   storage:
     size: 20Gi
     storageClass: longhorn-nvme-202

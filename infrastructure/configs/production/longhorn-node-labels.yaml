@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Node
 metadata:
-  name: talos-krw-er8
+  name: passer-cp-01
   labels:
     storage.passercluster.io/longhorn: disabled
     storage.passercluster.io/node-id: "200"
@@ -13,7 +13,7 @@ metadata:
 apiVersion: v1
 kind: Node
 metadata:
-  name: talos-7tm-1kh
+  name: passer-w-02
   labels:
     storage-tier: performance
     disk-type: nvme
@@ -52,7 +52,7 @@ metadata:
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: talos-krw-er8
+  name: passer-cp-01
   namespace: longhorn-system
   labels:
     app.kubernetes.io/name: longhorn
@@ -71,7 +71,7 @@ spec:
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: talos-7tm-1kh
+  name: passer-w-02
   namespace: longhorn-system
   labels:
     app.kubernetes.io/name: longhorn

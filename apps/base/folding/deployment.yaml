@@ -97,4 +97,4 @@ spec:
                 matchExpressions:
                   - key: kubernetes.io/hostname
                     operator: In
-                    values: [passer-w-03, talos-7tm-1kh]
+                    values: [passer-w-03, passer-w-02]

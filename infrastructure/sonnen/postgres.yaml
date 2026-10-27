@@ -8,7 +8,7 @@ spec:
   instances: 1
   affinity:
     nodeSelector:
-      kubernetes.io/hostname: talos-7tm-1kh
+      kubernetes.io/hostname: passer-w-02
   storage:
     size: 2Gi
     storageClass: longhorn-nvme-202
