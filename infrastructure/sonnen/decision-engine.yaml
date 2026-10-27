@@ -20,6 +20,8 @@ spec:
         power-tier: critical
     spec:
       serviceAccountName: sonnen-controller
+      imagePullSecrets:
+        - name: ghcr-pull
       containers:
         - name: decision-engine
           image: ghcr.io/hschoss/sonnen-homelab-power-controller:dc5d122
@@ -31,11 +33,18 @@ spec:
             - secretRef:
                 name: sonnen-config-secret
           env:
-            - name: DATABASE_URL
+            - name: PGUSER
               valueFrom:
                 secretKeyRef:
-                  name: sonnen-postgres-app
-                  key: uri
+                  name: sonnen-db
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sonnen-db
+                  key: password
+            - name: DATABASE_URL
+              value: "postgresql://$(PGUSER):$(PGPASSWORD)@sonnen-postgres-rw:5432/sonnen"
           resources:
             requests:
               cpu: 10m
