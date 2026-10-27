@@ -12,6 +12,9 @@ talos/secrets.yaml
 talos-*/
 /talosconfig
 /talosconfiG
+/TALOSCONFIG
+/KUBECONFIG
+/kubeconfig
 
 # Handover / scratch notes
 NEW-PROMPT.md
