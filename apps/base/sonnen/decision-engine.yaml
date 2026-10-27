@@ -25,7 +25,9 @@ spec:
       containers:
         - name: decision-engine
           image: ghcr.io/hschoss/sonnen-homelab-power-controller:dc5d122
-          imagePullPolicy: IfNotPresent
+          # Keep Always in parallel with collector.yaml — same image tag,
+          # same rebuilt-twice history. See collector.yaml for context.
+          imagePullPolicy: Always
           command: ["python", "scripts/run_decision_engine.py"]
           envFrom:
             - configMapRef:

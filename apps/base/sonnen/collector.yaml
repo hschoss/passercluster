@@ -24,7 +24,11 @@ spec:
       containers:
         - name: collector
           image: ghcr.io/hschoss/sonnen-homelab-power-controller:dc5d122
-          imagePullPolicy: IfNotPresent
+          # Always: the first dc5d122 image on GHCR was built before
+          # scripts/run_collector.py was in the context, giving pods a
+          # python: can't open file error. The rebuilt image carries the
+          # same tag; IfNotPresent would keep the stale local cache.
+          imagePullPolicy: Always
           command: ["python", "scripts/run_collector.py"]
           envFrom:
             - configMapRef:
