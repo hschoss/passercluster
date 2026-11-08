@@ -9,3 +9,4 @@ resources:
   - longhorn.yaml
   - metallb.yaml
   - velero.yaml
+  - velero-credentials.secret.yaml
