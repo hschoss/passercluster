@@ -1,4 +1,4 @@
-# Tailnet-side exposure for Findash via Headscale (vpn.schloschi.com).
+# Tailnet-side exposure for Findash via Headscale (passer.schloschi.com).
 #
 # A single tailscale sidecar in userspace mode logs into the Headscale
 # control plane and serves the in-cluster Findash service as
@@ -100,7 +100,7 @@ spec:
             - name: TS_SERVE_CONFIG
               value: /etc/tailscale/serve.json
             - name: TS_EXTRA_ARGS
-              value: --login-server=https://vpn.schloschi.com --accept-dns=false
+              value: --login-server=https://passer.schloschi.com --accept-dns=false
           resources:
             requests: { cpu: 20m,  memory: 32Mi }
             limits:   { cpu: 200m, memory: 128Mi }

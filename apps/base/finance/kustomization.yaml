@@ -5,10 +5,7 @@ resources:
   - namespace.yaml
   - placeholder-deployment.yaml
   - httproute.yaml
-  # findash-tailnet temporarily disabled: headscale at vpn.schloschi.com
-  # is returning TLS internal error, blocking the pod from auth. Re-enable
-  # when headscale is healthy again.
-  # - findash-tailnet.yaml
+  - findash-tailnet.yaml
   # When the Findash image is built and pushed:
   # 1. Uncomment the two resources below
   # 2. Drop `placeholder-deployment.yaml` above
