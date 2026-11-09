@@ -80,6 +80,14 @@ spec:
         - name: findash
           image: ghcr.io/hschoss/findash:e37d54c
           imagePullPolicy: IfNotPresent
+          # Bypass `uv run` (which tries to rebuild the editable install at
+          # startup and can't write LICENSE under non-root). Call gunicorn
+          # straight from the baked venv.
+          command: ["/app/.venv/bin/gunicorn"]
+          args:
+            - findash.app.main:server
+            - --bind=0.0.0.0:5000
+            - --workers=2
           ports:
             - name: http
               containerPort: 5000
@@ -182,8 +190,8 @@ spec:
           command: ["/bin/sh", "-euxc"]
           args:
             - |
-              uv run alembic upgrade head
-              uv run findash seed-demo || true
+              /app/.venv/bin/alembic upgrade head
+              /app/.venv/bin/findash seed-demo || true
           envFrom:
             - configMapRef:
                 name: findash-config
