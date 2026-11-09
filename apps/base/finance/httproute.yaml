@@ -19,6 +19,5 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        # Swap to `findash` (port 5000) once the Findash Deployment is running.
-        - name: finance-placeholder
-          port: 80
+        - name: findash
+          port: 5000

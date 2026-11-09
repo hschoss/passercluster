@@ -1,7 +1,5 @@
-# Real Findash app manifests. NOT active yet — this file is not listed in
-# kustomization.yaml until a container image exists. See docs/FINDASH-DEPLOY.md
-# for the flip: build/push image, add this file to resources, drop the
-# placeholder Deployment, repoint the HTTPRoute to `findash:5000`.
+# Findash: Dash app + CNPG Postgres + migration Job + tailscale sidecar
+# that routes to corvus-datahub (100.64.0.2) in the same Headscale tailnet.
 ---
 apiVersion: v1
 kind: Service
@@ -37,16 +35,48 @@ spec:
         app.kubernetes.io/name: findash
     spec:
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:
+        # --- Outbound tailscale sidecar in kernel mode. Gives the pod a
+        # tailscale0 interface so findash can reach 100.64.0.2 directly.
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:v1.86.2
+          env:
+            - name: TS_HOSTNAME
+              value: findash
+            - name: TS_USERSPACE
+              value: "false"
+            - name: TS_EXTRA_ARGS
+              value: "--login-server=https://passer.schloschi.com --accept-dns=false --accept-routes=false"
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: headscale-authkey
+                  key: TS_AUTHKEY
+                  optional: true
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_KUBE_SECRET
+              value: ""
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [NET_ADMIN, NET_RAW]
+          resources:
+            requests: { cpu: 10m,  memory: 32Mi }
+            limits:   { cpu: 200m, memory: 128Mi }
+          volumeMounts:
+            - name: ts-state
+              mountPath: /var/lib/tailscale
+            - name: ts-tmp
+              mountPath: /tmp
+        # --- Findash app (Dash + gunicorn)
         - name: findash
-          # TODO: point at the pushed image, e.g.
-          #   ghcr.io/hschoss/findash:0.1.0
-          image: ghcr.io/hschoss/findash:latest
+          image: ghcr.io/hschoss/findash:e37d54c
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -56,26 +86,35 @@ spec:
                 name: findash-config
             - secretRef:
                 name: findash-db
+            - secretRef:
+                name: findash-dataserver
           readinessProbe:
             httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 30
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits:   { cpu: "1",  memory: 1Gi }
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities: { drop: [ALL] }
           volumeMounts:
-            - name: tmp
+            - name: app-tmp
               mountPath: /tmp
       volumes:
-        - name: tmp
+        - name: ts-state
+          emptyDir: {}
+        - name: ts-tmp
+          emptyDir: {}
+        - name: app-tmp
           emptyDir: {}
 ---
 apiVersion: v1
@@ -89,12 +128,9 @@ data:
   DEBUG: "false"
   DISPLAY_TIMEZONE: Europe/Berlin
   STALE_FORECAST_HOURS: "36"
-  # DATABASE_URL is composed inside the pod from the findash-db secret keys;
-  # SOURCE_DATABASE_URL stays empty until the upstream source DB is reachable.
-  SOURCE_DATABASE_URL: ""
 ---
-# Postgres for the app's own storage via CNPG (already installed in the
-# cluster). Small — this is the app-side DB, not the upstream price source.
+# Findash-own Postgres via CNPG. DATABASE_URL is composed by CNPG into the
+# findash-db secret (key: uri) which envFrom pulls into the findash container.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -115,9 +151,7 @@ spec:
     requests: { cpu: 50m,  memory: 128Mi }
     limits:   { cpu: 500m, memory: 512Mi }
 ---
-# One-shot Job: run alembic migrations + optional seed-demo. Kicks in after
-# Postgres is up. Idempotent — alembic tracks state, seed-demo is a no-op if
-# the demo rows already exist.
+# Idempotent migration + optional seed-demo. Runs once per manifest revision.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -133,7 +167,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: ghcr.io/hschoss/findash:latest
+          image: ghcr.io/hschoss/findash:e37d54c
           command: ["/bin/sh", "-euxc"]
           args:
             - |
