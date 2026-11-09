@@ -74,6 +74,8 @@ spec:
               mountPath: /var/lib/tailscale
             - name: ts-tmp
               mountPath: /tmp
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
         # --- Findash app (Dash + gunicorn)
         - name: findash
           image: ghcr.io/hschoss/findash:e37d54c
@@ -81,6 +83,11 @@ spec:
           ports:
             - name: http
               containerPort: 5000
+          env:
+            - name: HOME
+              value: /tmp
+            - name: UV_CACHE_DIR
+              value: /tmp/uv-cache
           envFrom:
             - configMapRef:
                 name: findash-config
@@ -116,6 +123,10 @@ spec:
           emptyDir: {}
         - name: app-tmp
           emptyDir: {}
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
 ---
 apiVersion: v1
 kind: ConfigMap
