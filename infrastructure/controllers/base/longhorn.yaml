@@ -67,3 +67,8 @@ spec:
       storageOverProvisioningPercentage: 100
       backupTarget: s3://longhorn-backups@minio-internal.internal:9000/longhorn
       backupTargetCredentialSecret: longhorn-s3-creds
+    longhornManager:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
