@@ -7,4 +7,4 @@ metadata:
     # for kernel-mode routing to corvus-datahub (100.64.0.2). baseline is the
     # weakest level that permits the required capability; the actual pods
     # still run as non-root with dropped caps on the app containers.
-    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce: privileged
