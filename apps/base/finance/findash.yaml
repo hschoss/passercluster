@@ -26,6 +26,10 @@ metadata:
     app.kubernetes.io/name: findash
 spec:
   replicas: 1
+  # Recreate: the tailscale state PVC is RWO, and two pods sharing one
+  # tailnet identity would fight over it.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: findash
@@ -40,11 +44,15 @@ spec:
       containers:
         # --- Outbound tailscale sidecar in kernel mode. Gives the pod a
         # tailscale0 interface so findash can reach 100.64.0.2 directly.
+        # Its node identity lives on the findash-egress-state PVC, so a pod
+        # restart re-uses the same Headscale node instead of registering
+        # findash-1, findash-2, … and does not need a fresh preauth key.
+        # The hostname differs from findash-tailnet's ("findash") on purpose.
         - name: tailscale
           image: ghcr.io/tailscale/tailscale:v1.86.2
           env:
             - name: TS_HOSTNAME
-              value: findash
+              value: findash-egress
             - name: TS_USERSPACE
               value: "false"
             - name: TS_EXTRA_ARGS
@@ -126,7 +134,8 @@ spec:
               mountPath: /tmp
       volumes:
         - name: ts-state
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: findash-egress-state
         - name: ts-tmp
           emptyDir: {}
         - name: app-tmp
@@ -135,6 +144,22 @@ spec:
           hostPath:
             path: /dev/net/tun
             type: CharDevice
+---
+# Persistent tailscale identity for the egress sidecar above.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: findash-egress-state
+  namespace: finance
+  labels:
+    app.kubernetes.io/name: findash
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: ConfigMap
