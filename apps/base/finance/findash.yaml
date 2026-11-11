@@ -1,4 +1,4 @@
-# Findash: Dash app + CNPG Postgres + migration Job + tailscale sidecar
+# Findash: Dash app + price-sync loop + CNPG Postgres + migration Job + tailscale sidecar
 # that routes to corvus-datahub (100.64.0.2) in the same Headscale tailnet.
 ---
 apiVersion: v1
@@ -30,6 +30,9 @@ spec:
   # tailnet identity would fight over it.
   strategy:
     type: Recreate
+    # Explicit null: Flux server-side apply otherwise keeps the defaulted
+    # rollingUpdate block, which the API rejects together with Recreate.
+    rollingUpdate: null
   selector:
     matchLabels:
       app.kubernetes.io/name: findash
@@ -86,7 +89,7 @@ spec:
               mountPath: /dev/net/tun
         # --- Findash app (Dash + gunicorn)
         - name: findash
-          image: ghcr.io/hschoss/findash:e37d54c
+          image: ghcr.io/hschoss/findash:2026-11-11-sync
           imagePullPolicy: IfNotPresent
           # Bypass `uv run` (which tries to rebuild the editable install at
           # startup and can't write LICENSE under non-root). Call gunicorn
@@ -96,6 +99,12 @@ spec:
             - findash.app.main:server
             - --bind=0.0.0.0:5000
             - --workers=2
+            # The first request in each worker makes Dash build every page
+            # layout once, and each layout queries the dataserver over the
+            # relayed tailnet link (~240 ms per round trip). That takes
+            # longer than gunicorn's default 30 s, which killed the worker
+            # mid-request and put the pod into a restart loop.
+            - --timeout=300
           ports:
             - name: http
               containerPort: 5000
@@ -111,14 +120,22 @@ spec:
                 name: findash-db
             - secretRef:
                 name: findash-dataserver
+          # Up to 10 min for the slow first requests (see --timeout above);
+          # liveness and readiness only start once this has passed.
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet: { path: /healthz, port: http }
-            initialDelaySeconds: 60
             periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits:   { cpu: "1",  memory: 1Gi }
@@ -132,7 +149,55 @@ spec:
           volumeMounts:
             - name: app-tmp
               mountPath: /tmp
+        # --- Price sync: corvus-datahub (derived.v_etf_daily_price_current)
+        # -> market.prices in findash-postgres. The Rueckschau pages read
+        # only from that local table, so without this loop they never see
+        # datahub data. It lives in this pod because only this pod has the
+        # tailscale0 route to 100.64.0.2; a CronJob would need its own
+        # tailnet identity. Which instruments are mirrored is decided by
+        # config/sync_mapping.yaml inside the image.
+        - name: sync
+          image: ghcr.io/hschoss/findash:2026-11-11-sync
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # The datahub ingests twice a day; every 6 h is plenty.
+              # After a failure (tailnet not up yet, datahub asleep) retry
+              # after 5 min instead of waiting a full interval.
+              while true; do
+                if /app/.venv/bin/findash sync run; then
+                  sleep 21600
+                else
+                  sleep 300
+                fi
+              done
+          env:
+            - name: HOME
+              value: /tmp
+          envFrom:
+            - configMapRef:
+                name: findash-config
+            - secretRef:
+                name: findash-db
+            - secretRef:
+                name: findash-dataserver
+          resources:
+            requests: { cpu: 20m,  memory: 128Mi }
+            limits:   { cpu: 500m, memory: 512Mi }
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - name: sync-tmp
+              mountPath: /tmp
       volumes:
+        - name: sync-tmp
+          emptyDir: {}
         - name: ts-state
           persistentVolumeClaim:
             claimName: findash-egress-state
@@ -195,7 +260,9 @@ spec:
     requests: { cpu: 50m,  memory: 128Mi }
     limits:   { cpu: 500m, memory: 512Mi }
 ---
-# Idempotent migration + optional seed-demo. Runs once per manifest revision.
+# Idempotent schema migration. Runs once per manifest revision.
+# No `findash seed-demo` here: it would overwrite the real prices the sync
+# container mirrors from the datahub with synthetic ones (up to 2024-12-31).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -211,12 +278,11 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: ghcr.io/hschoss/findash:e37d54c
+          image: ghcr.io/hschoss/findash:2026-11-11-sync
           command: ["/bin/sh", "-euxc"]
           args:
             - |
               /app/.venv/bin/alembic upgrade head
-              /app/.venv/bin/findash seed-demo || true
           envFrom:
             - configMapRef:
                 name: findash-config
